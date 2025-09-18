@@ -8,4 +8,5 @@ Team Members:
   Thanusan Kanagasingam         40248590          thanusan11
   Suheil Almouhassel            40285426            suheil2004
   Harshitaa Yogesh Nandgaonkar  40193642            hnandga
+  Jakson Rabinovitch            40285726           jaksonrab
 =======
