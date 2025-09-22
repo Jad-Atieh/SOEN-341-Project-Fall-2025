@@ -1,5 +1,7 @@
 # SOEN-341-Project-Fall-2025
 
+## Objective
+Develop a program for managing, promoting, and attending campus events.
 
 ## Team Members
 - Jaad Atieh (40273022) — Jad-Atieh  
@@ -11,39 +13,8 @@
 - Jakson Rabinovitch (40285726) — jaksonrab  
 - Denise Balaba (40246058) — denise-com  
 
-## Project Description / Objectives
-You are implementing a Campus Events & Ticketing Web Application designed to help students discover, organize, and attend events on campus. The system enables students to browse events, save them, claim free or paid tickets, and check in using QR codes. Organizers can create and manage events, track attendance, and access analytics through dashboards, while administrators moderate content and oversee organizations. The application streamlines event management, improves student engagement, and provides valuable insights for both organizers and campus administration.
+## Project Description & Core Features
+This project is a web application that assists students to create, look for, and go to events in their university. Organizers will be able to post and handle events as well as to check its attendance and analytics. Students can search for, register for and save events. They can also claim their tickets and check in with QR codes. Administrators can also moderate and manage organizations. 
 
 ## Programming Languages & Techniques
 - TBD
-
-## Core Features
-We identify three primary users: Students, Organizers, and Administrators.
-
-### Student Event Experience
-- Event Discovery
-- Browse and search events with filters (date, category, organization).
-- Event Management
-- Save events to a personal calendar.
-- Claim tickets (free or mock paid).
-- Receive a digital ticket with a unique QR code.
-
-
-### Organizer Event Management
-- Event Creation
-- Enter event details: title, description, date/time, location, ticket capacity, ticket type (free or paid).
-- Event Analytics
-- Dashboard per event with stats: tickets issued, attendance rates, and remaining capacity.
-- Tools
-- Export the attendee list in CSV.
-- Integrated QR scanner for ticket validation (for simplicity, you can assume the QR code image can be provided via file upload).
-
-
-### Administrator Dashboard & Moderation
-- Platform Oversight
-- Approve organizer accounts.
-- Moderate event listings for policy compliance.
-- Analytics
-- View global stats: number of events, tickets issued, and participation trends.
-- Management
-- Manage organizations and assign roles.
