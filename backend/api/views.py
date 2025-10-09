@@ -1,0 +1,38 @@
+"""Views: These handle HTTP requests (GET, POST, PUT, DELETE).
+- Each class corresponds to an API endpoint that does something (like register a user)."""
+
+from django.shortcuts import render
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from rest_framework import generics
+from .serializers import UserSerializer
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
+
+# class NoteListCreate(generics.ListCreateAPIView):
+#     serializer_class = NoteSerializer - checks if data is valid
+#     permission_classes = [IsAuthenticated] - only users with a token can access this view
+
+    #gets notes from a specific user
+#     def get_queryset(self):
+#         user = self.request.user 
+#         return Note.objects.filter(author=user)
+    
+#     def perform_create(self, serializer): - overriding the default method 
+#         if serializer.is_valid(): - if data is valid based on serializer rules, then save it
+#             serializer.save(author=self.request.user)
+#         else:
+#             print(serializer.errors)
+
+# class NoteDelete(generics.DestroyAPIView):
+#     serializer_class = NoteSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         user = self.request.user
+#         return Note.objects.filter(author=user)
+
+class CreateUserView(generics.CreateAPIView):
+    queryset = User.objects.all() # Specify the queryset for user objects
+    serializer_class = UserSerializer # What kidve of serializer to use (data accepted to make a new user)
+    permission_classes = [AllowAny] # Allow any user (authenticated or not) to access this view

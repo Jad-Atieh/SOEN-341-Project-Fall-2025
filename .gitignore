@@ -1,0 +1,27 @@
+# Create or update .gitignore
+cat > .gitignore << 'EOF'
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+
+# Migrations (optional - only if you want to exclude them)
+# */migrations/
+
+# Virtual Environment
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+EOF
