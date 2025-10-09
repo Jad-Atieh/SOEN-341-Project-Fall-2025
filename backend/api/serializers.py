@@ -1,3 +1,7 @@
+"""Serializer: Converts Django model instances <-> JSON data.
+ - Takes JSON from frontend and converts it to Python objects (for saving in DB)
+ - Takes Python objects from backend and converts to JSON (for sending to frontend)"""
+
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Note
@@ -14,8 +18,9 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data) # Create a new user instance usiign the validated data
         return user
 
-class NoteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Note
-        fields = ["id", "title", "content", "created_at", "author"]
-        extra_kwargs = {"author": {"read_only": True}}
+#sample serializer for notes - creates a note with specific fields and makes author read only
+# class NoteSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Note
+#         fields = ["id", "title", "content", "created_at", "author"]
+#         extra_kwargs = {"author": {"read_only": True}}
