@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>MEMO | Liste de tâches à compléter</title>
+    <meta name="description" content="Application Web de gestion de tâches à compléter.">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="conteneur">
+        <a>
+            <h1>Event List</h1>
+        </a>
+        <form method="post" autocomplete="off">
+            <input autofocus class="quoi-faire" type="text" name="texteTache" placeholder="Tâche à accomplir ...">
+        </form>
+        <!--
+        <div class="filtres">
+             Les liens suivants permettent de filtrer les tâches
+            <a href="?action=filtrer&accomplie=1">Complétées</a>
+            <a href="?action=filtrer&accomplie=0">Non-complétées</a>
+            <a href="">Toutes</a>
+        </div>
+        -->
+        <ul class="liste-taches">
+            <!-- 
+            Utilisez les éléments LI suivants comme gabarits pour l'affichage
+            des "tâches".
+            
+            Remarquez la présence de la classe "accomplie" sur l'élément LI pour le montrer 
+            biffé (complété) ou non (dépend de la valeur du champ "accomplie" dans le fichier JSON).
+            -->
+            <li>
+                <span class="coche"><a href="?action=basculer&id=[idDeLaTache]"
+                        title="Cliquez pour faire basculer l'état de cette tâche."><img
+                            src="ressources/images/coche.svg" alt=""></a></span>
+                <span class="texte">Cette tâche n'est pas complétée (pas accomplie)</span>
+                <span class="ajout">[date-ajout-tache]</span>
+            </li>
+            <li class="accomplie">
+                <span class="coche"><a href="?action=basculer&id=[idDeLaTache]"
+                        title="Cliquez pour faire basculer l'état de cette tâche."><img
+                            src="ressources/images/coche.svg" alt=""></a></span>
+                <span class="texte">Cette tâche est complétée (accomplie)</span>
+                <span class="ajout">[date-ajout-tache]</span>
+            </li>
+        </ul>
+    </div>
+</body>
+
+</html>
