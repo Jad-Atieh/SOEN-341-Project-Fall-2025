@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sign Up</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="d-flex justify-content-center align-items-center vh-100">
+  <div class="card p-4 shadow" style="width: 350px;">
+    <h3 class="text-center mb-3">Sign Up</h3>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.email.label }}<br>
+      {{ form.email }}<br>
+      {{ form.username.label }}<br>
+      {{ form.username }}<br>
+      <b>Register as:</b><br>
+      {{ form.role }}<br>
+      {{ form.password1.label }}<br>
+      {{ form.password1 }}<br>
+      {{ form.password2.label }}<br>
+      {{ form.password2 }}<br>
+      <button type="submit" class="btn btn-success w-100 mt-2">Sign Up</button>
+    </form>
+  </div>
+</body>
+</html>
