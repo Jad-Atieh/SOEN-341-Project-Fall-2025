@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Event</title>
   <link rel="stylesheet" href="../static/css/style.css">
 </head>
@@ -9,22 +11,33 @@
     <h1>Create a New Event</h1>
   </header>
 
-  <section>
+  <section class="create-event">
+    <h2>Organizer Panel</h2>
+    <p>Fill in the details below to post a new campus event for students to see.</p>
+
     <form>
-      <label>Title:</label>
-      <input type="text" placeholder="Event title" required><br>
+      <label for="title">Title:</label>
+      <input id="title" type="text" placeholder="Event title" required>
 
-      <label>Date:</label>
-      <input type="date"><br>
+      <label for="description">Description:</label>
+      <textarea id="description" placeholder="Write a short description" required></textarea>
 
-      <label>Category:</label>
-      <input type="text" placeholder="Technology, Social, etc."><br>
+      <label for="date">Date:</label>
+      <input id="date" type="date" required>
 
-      <label>Description:</label>
-      <textarea placeholder="Write a short description"></textarea><br>
+      <label for="time">Time:</label>
+      <input id="time" type="time" required>
+
+      <label for="location">Location:</label>
+      <input id="location" type="text" placeholder="Event location" required>
+
+      <label for="capacity">Ticket Capacity:</label>
+      <input id="capacity" type="number" placeholder="Enter max seats" min="1" required>
 
       <button type="submit">Save Event</button>
     </form>
   </section>
 </body>
 </html>
+
+
