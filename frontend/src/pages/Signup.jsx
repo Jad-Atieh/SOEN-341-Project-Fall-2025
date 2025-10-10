@@ -1,5 +1,7 @@
+import Form from "../components/Form"
+
 function Signup() {
-    return <div> Signup</div>
+    return <Form route="/api/user/signup/" method="signup" />
 }
 
 export default Signup
