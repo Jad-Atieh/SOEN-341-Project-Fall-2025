@@ -1,53 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <title>MEMO | Liste de tâches à compléter</title>
-    <meta name="description" content="Application Web de gestion de tâches à compléter.">
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Event List</title>
+
+    <link rel="stylesheet" type="text/css" href="css/styles.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
 </head>
 
 <body>
-    <div class="conteneur">
-        <a>
-            <h1>Event List</h1>
-        </a>
-        <form method="post" autocomplete="off">
-            <input autofocus class="quoi-faire" type="text" name="texteTache" placeholder="Tâche à accomplir ...">
-        </form>
-        <!--
-        <div class="filtres">
-             Les liens suivants permettent de filtrer les tâches
-            <a href="?action=filtrer&accomplie=1">Complétées</a>
-            <a href="?action=filtrer&accomplie=0">Non-complétées</a>
-            <a href="">Toutes</a>
-        </div>
-        -->
-        <ul class="liste-taches">
-            <!-- 
-            Utilisez les éléments LI suivants comme gabarits pour l'affichage
-            des "tâches".
-            
-            Remarquez la présence de la classe "accomplie" sur l'élément LI pour le montrer 
-            biffé (complété) ou non (dépend de la valeur du champ "accomplie" dans le fichier JSON).
-            -->
-            <li>
-                <span class="coche"><a href="?action=basculer&id=[idDeLaTache]"
-                        title="Cliquez pour faire basculer l'état de cette tâche."><img
-                            src="ressources/images/coche.svg" alt=""></a></span>
-                <span class="texte">Cette tâche n'est pas complétée (pas accomplie)</span>
-                <span class="ajout">[date-ajout-tache]</span>
-            </li>
-            <li class="accomplie">
-                <span class="coche"><a href="?action=basculer&id=[idDeLaTache]"
-                        title="Cliquez pour faire basculer l'état de cette tâche."><img
-                            src="ressources/images/coche.svg" alt=""></a></span>
-                <span class="texte">Cette tâche est complétée (accomplie)</span>
-                <span class="ajout">[date-ajout-tache]</span>
-            </li>
-        </ul>
-    </div>
+    <header>
+
+    </header>
+
+    <section class="global">
+        <section>
+            <nav>
+                <a class="titre" href="index.html">List of Events</a>
+                <div class="menu">
+                    <a>Catalogue</a>
+                    <a>Contact</a>
+                </div>
+            </nav>
+            <section class="main">
+                <div class="vedette">
+                    <div class="titleFirst">ACCUEIL</div>
+                    <div class="titleSecond">En Vedette</div>
+                    <div class="showcase">
+                        <div class="game">
+                            <img src="img/endme.jpg" alt="">
+                            <div class="extra">Détails</div>
+                        </div>
+                        <div class="game">
+                            <img src="img/hammer.jpg" alt="">
+                            <div class="extra">Détails</div>
+                        </div>
+                        <div class="game">
+                            <img src="img/nemesis.jpg" alt="">
+                            <div class="extra">Détails</div>
+                        </div>
+                        <div class="game">
+                            <img src="img/gears.jpeg" alt="">
+                            <div class="extra">Détails</div>
+                        </div>
+                        <div class="game">
+                            <img src="img/marvel.jpg" alt="">
+                            <div class="extra">Détails</div>
+                        </div>
+                        <div class="game">
+                            <img src="img/path.jpeg" alt="">
+                            <div class="extra">Détails</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- <div class="zoom">
+                    <div>
+                        <img class="zoomed" src="" alt="">
+                    </div>
+
+                </div> -->
+                <div class="side">
+                    <div class="find">
+                        <div>dont!</div>
+                        <p>Emplacement du magasin:</p>
+                        <p>1884 St-Martin Ouest</p>
+                        <p>Laval, Québec</p>
+                    </div>
+                    <div class="keemstar">
+                        <div>Nouvelles</div>
+                        <p>-Knack III meilleur jeu de tous les temps?</p>
+                        <p>-Shadow The Hedgehog le jeu de table est arrivé!</p>
+                    </div>
+                </div>
+            </section>
+            <footer>footer.</footer>
+        </section>
+    </section>
 </body>
 
 </html>
