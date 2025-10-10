@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-     "api",
+    "api",
     "rest_framework",
     "corsheaders",
 ]
@@ -107,6 +107,8 @@ DATABASES = {
         "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
     }
 }
+
+AUTH_USER_MODEL = 'api.User'
 
 
 # Password validation
