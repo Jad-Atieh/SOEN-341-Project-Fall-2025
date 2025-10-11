@@ -1,13 +1,18 @@
 """Views: These handle HTTP requests (GET, POST, PUT, DELETE).
 - Each class corresponds to an API endpoint that does something (like register a user)."""
 
+
 from django.shortcuts import render
-from django.shortcuts import render
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from rest_framework import generics
 from .serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response                      
+from .serializers import UserSerializer
 
+User = get_user_model
 
 # class NoteListCreate(generics.ListCreateAPIView):
 #     serializer_class = NoteSerializer - checks if data is valid
@@ -27,3 +32,20 @@ class CreateUserView(generics.CreateAPIView):
 
     def get_queryset(self):
         return User.objects.all()
+    
+
+#Login API
+class LoginUserView(APIView):
+    permission_classes = [AllowAny]  # Allow any user (authenticated or not) to access this view
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        user = authenticate(username=username, password=password)
+        if user:
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({'token': token.key})
+        else:
+            return Response({'error': 'Invalid Credentials'}, status=400)
+        
