@@ -2,11 +2,13 @@
 - Each class corresponds to an API endpoint that does something (like register a user)."""
 
 from django.shortcuts import render
-from django.shortcuts import render
+#from django.shortcuts import render
 from django.contrib.auth import get_user_model
 from rest_framework import generics
 from .serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.http import HttpResponse
+from django.template import loader
 
 
 # class NoteListCreate(generics.ListCreateAPIView):
@@ -27,3 +29,12 @@ class CreateUserView(generics.CreateAPIView):
 
     def get_queryset(self):
         return User.objects.all()
+    
+
+def load(request):
+    template = loader.get_template("events_list.html")
+    return HttpResponse(template.render())
+
+def members(request):
+    #template = loader.get_template("events_list.html")
+    return HttpResponse("god help")
