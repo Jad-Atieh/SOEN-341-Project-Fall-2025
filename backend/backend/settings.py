@@ -98,13 +98,15 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
      "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "soen341",
-        "USER": "thanusan11",
-        "PASSWORD": "soen341team1",
-        "HOST": "localhost",   # or DB host
-        "PORT": "3306",
-        "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "mydatabase",
+        #"ENGINE": "django.db.backends.mysql",
+        #"NAME": "soen341",
+        #"USER": "thanusan11",
+        #"PASSWORD": "soen341team1",
+        #"HOST": "localhost",   # or DB host
+        #"PORT": "3306",
+        #"OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
     }
 }
 
