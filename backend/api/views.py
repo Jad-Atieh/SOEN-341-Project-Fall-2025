@@ -31,10 +31,14 @@ class CreateUserView(generics.CreateAPIView):
         return User.objects.all()
     
 
-def load(request):
+def loadeventlist(request):
     template = loader.get_template("events_list.html")
     return HttpResponse(template.render())
 
-def members(request):
-    #template = loader.get_template("events_list.html")
-    return HttpResponse("god help")
+def loadeventcreator(request):
+    template = loader.get_template("create_event.html")
+    return HttpResponse(template.render())
+
+def loadeventbrowser(request):
+    template = loader.get_template("browse_events.html")
+    return HttpResponse(template.render())
