@@ -1,3 +1,4 @@
+/* General page layout */
 body {
   font-family: "Poppins", Arial, sans-serif;
   background-color: #f8f9fa;
@@ -6,7 +7,7 @@ body {
   color: #333;
 }
 
-/* ===== HEADER ===== */
+/* Header */
 header {
   background-color: #004aad;
   color: white;
@@ -20,16 +21,15 @@ header h1 {
   font-size: 1.8rem;
 }
 
-/* ===== TITLES ===== */
+/* Section titles */
 h2 {
   text-align: center;
   color: #004aad;
   margin-top: 1.5rem;
 }
 
-/* ===== EVENTS GRID (used in browse and list pages) ===== */
-.events,
-.events-list {
+/* Event cards (Browse Event Page) */
+.events {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.2rem;
@@ -82,7 +82,7 @@ button[disabled] {
   cursor: not-allowed;
 }
 
-/* ===== STATUS TAGS ===== */
+/* Status tags */
 .sold-out {
   color: red;
   font-weight: bold;
@@ -93,7 +93,7 @@ button[disabled] {
   font-weight: bold;
 }
 
-/* ===== CREATE EVENT FORM ===== */
+/* Create Event Page */
 .create-event {
   max-width: 600px;
   margin: 2rem auto;
