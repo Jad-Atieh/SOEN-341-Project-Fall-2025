@@ -13,6 +13,7 @@ import api from "../api";
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import "../styles/Forms.css"
+import LoadingIndicator from "./LoadingIndicator";
 
 function Form({ route, method }) {
   const [username, setUsername] = useState("");
@@ -93,6 +94,8 @@ function Form({ route, method }) {
           <option value="organizer">Organizer</option>
         </select>
       )}
+
+       {loading && <LoadingIndicator />}
 
       <button type="submit" className="form-button">
         {name}
