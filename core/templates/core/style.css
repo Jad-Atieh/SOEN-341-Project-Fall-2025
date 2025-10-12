@@ -1,4 +1,3 @@
-
 body {
   font-family: "Poppins", Arial, sans-serif;
   background-color: #f8f9fa;
@@ -7,7 +6,7 @@ body {
   color: #333;
 }
 
-
+/* ===== HEADER ===== */
 header {
   background-color: #004aad;
   color: white;
@@ -21,15 +20,16 @@ header h1 {
   font-size: 1.8rem;
 }
 
-
+/* ===== TITLES ===== */
 h2 {
   text-align: center;
   color: #004aad;
   margin-top: 1.5rem;
 }
 
-
-.events {
+/* ===== EVENTS GRID (used in browse and list pages) ===== */
+.events,
+.events-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.2rem;
@@ -38,6 +38,7 @@ h2 {
   margin: auto;
 }
 
+/* ===== EVENT CARD ===== */
 .event-card {
   background-color: white;
   border-radius: 10px;
@@ -50,7 +51,8 @@ h2 {
   transform: translateY(-5px);
 }
 
-.event-card h3 {
+.event-card h3,
+.event-card h2 {
   color: #004aad;
   margin-top: 0;
 }
@@ -60,6 +62,7 @@ h2 {
   font-size: 0.95rem;
 }
 
+/* ===== BUTTONS ===== */
 button {
   background-color: #004aad;
   color: white;
@@ -79,6 +82,7 @@ button[disabled] {
   cursor: not-allowed;
 }
 
+/* ===== STATUS TAGS ===== */
 .sold-out {
   color: red;
   font-weight: bold;
@@ -89,6 +93,7 @@ button[disabled] {
   font-weight: bold;
 }
 
+/* ===== CREATE EVENT FORM ===== */
 .create-event {
   max-width: 600px;
   margin: 2rem auto;
@@ -125,4 +130,15 @@ form button {
   margin: 1.5rem auto 0;
   width: 50%;
   font-size: 1rem;
+}
+
+/* ===== EVENTS LIST PAGE (extra polish) ===== */
+.events-list .event-card {
+  text-align: left;
+}
+
+.events-list .event-card button {
+  margin-top: 0.8rem;
+  width: 100%;
+  font-size: 0.95rem;
 }
