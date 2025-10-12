@@ -7,6 +7,7 @@ import EventsList from "./pages/EventsList";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Home from "./pages/Home";
 
 function Logout() {
   localStorage.clear();
@@ -20,20 +21,23 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
+        <Route path="/events" element={<EventsList />} />
+
+
 
         {/* Protected route: students can view events */}
-        <Route path="/events" element={
+        {/*<Route path="/events" element={
           <ProtectedRoute allowedRoles={["student"]}>
             <EventsList />
           </ProtectedRoute>
-        }/>
+        }/>*/}
 
         {/* Protected route: admins only */}
         <Route path="/admin" element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminDashboard />
           </ProtectedRoute>
-        }/>
+        } />
 
         {/* Catch-all for unknown routes */}
         <Route path="*" element={<NotFound />} />

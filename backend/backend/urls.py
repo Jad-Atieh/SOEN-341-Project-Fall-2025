@@ -13,4 +13,5 @@ urlpatterns = [
     path("api/token/refresh/", TokenRefreshView.as_view(), name="refresh"), # This route "/api/token/refresh/" lets a user refresh their JWT token if it expires
     path("api-auth/", include("rest_framework.urls")), 
     path("api/", include("api.urls")), #includes urls from the api app
+    #path("eventlist/", )
 ]
