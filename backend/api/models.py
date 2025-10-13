@@ -5,13 +5,17 @@
 
 from django.db import models
 from django.contrib.auth.models import User # Link data to specific users
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
-#sample model for notes
-# class Note(models.Model):
-#     title = models.CharField(max_length=100) # CharField for short text
-#     content = models.TextField() # TextField for long text
-#     created_at = models.DateTimeField(auto_now_add=True) # DateTimeField to store date and time, auto set on creation
-#     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notes") #ForeignKey creates a relationship (many‑to‑one) between Note and User, when user deleted so is data, and can be accessed with user.notes.all()
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The email field must be filled out.')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password) # hashes password
+        user.save(using=self._db) # save to database
+        return user
 
 #     def __str__(self):
 #         return self.title
