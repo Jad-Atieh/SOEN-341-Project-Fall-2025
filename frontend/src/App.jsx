@@ -1,9 +1,9 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-import Signup from "./pages/Signup";
+import Signup from "./pages/Register";
 import Login from "./pages/Login";
-import EventsList from "./pages/EventsList";
+//import EventsList from "./pages/EventsList";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -17,7 +17,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
 

@@ -99,11 +99,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
      "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "mariadb_",
-        "USER": "root",
-        "PASSWORD": "soen341team1",
-        "HOST": "localhost",   # or DB host
-        "PORT": "3306",
+        'NAME': 'soen341',
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
         "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
     }
 }
@@ -138,6 +138,8 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+AUTH_USER_MODEL = 'api.User'
 
 
 # Static files (CSS, JavaScript, Images)
