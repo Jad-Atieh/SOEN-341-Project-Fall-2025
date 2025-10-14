@@ -9,10 +9,15 @@ from .serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from rest_framework.response import Response                      
-from .serializers import UserSerializer
+from rest_framework.response import Response
 
-User = get_user_model
+
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+
+
+User = get_user_model()
 
 # class NoteListCreate(generics.ListCreateAPIView):
 #     serializer_class = NoteSerializer - checks if data is valid
@@ -22,8 +27,6 @@ User = get_user_model
 #     def get_queryset(self):
 #         user = self.request.user 
 #         return Note.objects.filter(author=user)
-    
-User = get_user_model()
 
 class CreateUserView(generics.CreateAPIView):
 #    queryset = User.objects.all() # Specify the queryset for user objects
@@ -39,13 +42,25 @@ class LoginUserView(APIView):
     permission_classes = [AllowAny]  # Allow any user (authenticated or not) to access this view
 
     def post(self, request):
-        username = request.data.get('username')
+        email = request.data.get('email')
         password = request.data.get('password')
 
-        user = authenticate(username=username, password=password)
+        if not email or not password:
+            return Response({'error': 'Email and password are required'}, status=400)
+
+        user = authenticate(username=email, password=password)
         if user:
             token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key})
+            return Response({
+                'token': token.key,
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'name': user.name,
+                    'role': user.role,
+                    'status': user.status
+                }
+            })
         else:
             return Response({'error': 'Invalid Credentials'}, status=400)
         

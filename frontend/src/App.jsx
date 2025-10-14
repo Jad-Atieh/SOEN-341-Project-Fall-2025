@@ -29,7 +29,7 @@ function App() {
         }/>
 
         {/* Protected route: admins only */}
-        <Route path="/admin" element={
+        <Route path="/admin-dashboard" element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminDashboard />
           </ProtectedRoute>
