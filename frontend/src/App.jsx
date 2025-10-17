@@ -22,14 +22,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Home page defaults to EventsList for logged-in users */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <EventsList />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/" element={ <ProtectedRoute> <EventsList /> </ProtectedRoute>}/>
 
         {/* Authentication routes */}
         <Route path="/login" element={<Login />} />
@@ -37,19 +30,12 @@ function App() {
         <Route path="/logout" element={<Logout />} />
 
         {/* Admin dashboard (protected) */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/admin"element={<ProtectedRoute> <AdminDashboard /> </ProtectedRoute> }/>
 
         {/* 404 page */}
         <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+   </BrowserRouter>
   );
 }
 
