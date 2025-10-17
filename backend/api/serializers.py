@@ -27,10 +27,3 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
         return user
-
-#sample serializer for notes - creates a note with specific fields and makes author read only
-# class NoteSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Note
-#         fields = ["id", "title", "content", "created_at", "author"]
-#         extra_kwargs = {"author": {"read_only": True}}

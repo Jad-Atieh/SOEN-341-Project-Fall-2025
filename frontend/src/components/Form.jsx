@@ -1,25 +1,23 @@
 /**
  * Form Component
  *
- * This React component handles both user login and signup forms.
- * For signup, it collects username, email, password, and role (student, organizer, admin).
- * For login, it collects email and password only.
- * On login, it stores JWT tokens in localStorage and redirects to the home/events page.
- * On signup, it redirects the user to the login page after successful registration.
+ * Handles both user login and signup forms.
+ * On login: stores JWT tokens in localStorage and redirects to the events page.
+ * On signup: redirects to login after successful registration.
  */
 
 import { useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
-import "../styles/Forms.css"
+import "../styles/Forms.css";
 import LoadingIndicator from "./LoadingIndicator";
 
 function Form({ route, method }) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student"); // default role
+  const [role, setRole] = useState("student");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -33,19 +31,25 @@ function Form({ route, method }) {
       const data =
         method === "login"
           ? { email, password }
-          : { username, email, password, role };
+          : { name: username, email, password, role };
 
       const res = await api.post(route, data);
 
       if (method === "login") {
+        // ✅ Store tokens and user info
         localStorage.setItem(ACCESS_TOKEN, res.data.access);
         localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
-        navigate("/"); 
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+
+        // ✅ Redirect to events page
+        navigate("/");
       } else {
-        navigate("/login"); 
+        // Signup → go to login page
+        navigate("/login");
       }
     } catch (error) {
-      alert(error);
+      console.error("Error:", error);
+      alert(error.response?.data?.error || "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -95,7 +99,7 @@ function Form({ route, method }) {
         </select>
       )}
 
-       {loading && <LoadingIndicator />}
+      {loading && <LoadingIndicator />}
 
       <button type="submit" className="form-button">
         {name}
@@ -105,3 +109,4 @@ function Form({ route, method }) {
 }
 
 export default Form;
+
