@@ -23,7 +23,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('status', 'active')
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-
+        
         return self.create_user(email, password, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -32,43 +32,30 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('organizer', 'Organizer'),
         ('admin', 'Admin'),
     ]
-
+    
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('pending', 'Pending'),
         ('suspended', 'Suspended'),
     ]
-
+    
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-
+    
     objects = CustomUserManager()
-
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
-
+    
     def __str__(self):
         return f"{self.name} ({self.email})"
-
+    
     class Meta:
         db_table = 'users'
-
-class Event(models.Model):
-    name = models.CharField(max_length=200)                 # Event name/title
-    description = models.TextField(blank=True, null=True)   # Optional details
-    location = models.CharField(max_length=255)             # Event location
-    start_time = models.DateTimeField()                     # Starts at
-    end_time = models.DateTimeField()                       # Ends at
-    is_discovered = models.BooleanField(default=False)      # Discovery flag
-    created_at = models.DateTimeField(auto_now_add=True)    # When created
-    updated_at = models.DateTimeField(auto_now=True)        # When modified
-
-    def __str__(self):
-        return self.name

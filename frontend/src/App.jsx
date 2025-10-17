@@ -1,44 +1,41 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import Signup from "./pages/Register";
+// Pages
+import Signup from "./pages/Signup";
 import Login from "./pages/Login";
-//import EventsList from "./pages/EventsList";
+import EventsList from "./pages/EventsList";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
+
+// Components
 import ProtectedRoute from "./components/ProtectedRoute";
 
+// Logout function
 function Logout() {
-  localStorage.clear();
-  return <Navigate to="/login" />;
+  localStorage.clear(); // Clear tokens
+  return <Navigate to="/login" />; // Redirect to login
 }
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        <Route path="/register" element={<Register />} />
+        {/* Home page defaults to EventsList for logged-in users */}
+        <Route path="/" element={ <ProtectedRoute> <EventsList /> </ProtectedRoute>}/>
+
+        {/* Authentication routes */}
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/logout" element={<Logout />} />
 
-        {/* Protected route: students can view events */}
-        <Route path="/events" element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            <EventsList />
-          </ProtectedRoute>
-        }/>
+        {/* Admin dashboard (protected) */}
+        <Route path="/admin"element={<ProtectedRoute> <AdminDashboard /> </ProtectedRoute> }/>
 
-        {/* Protected route: admins only */}
-        <Route path="/admin" element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }/>
-
-        {/* Catch-all for unknown routes */}
+        {/* 404 page */}
         <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
+        </Routes>
+   </BrowserRouter>
   );
 }
 

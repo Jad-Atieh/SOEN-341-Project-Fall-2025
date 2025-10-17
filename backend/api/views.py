@@ -15,9 +15,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 
     #gets notes from a specific user
 #     def get_queryset(self):
-#         user = self.request.user
+#         user = self.request.user 
 #         return Note.objects.filter(author=user)
-
+    
 User = get_user_model()
 
 class CreateUserView(generics.CreateAPIView):
