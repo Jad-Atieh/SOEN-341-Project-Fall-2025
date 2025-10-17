@@ -7,6 +7,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import generics
 from .serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.http import HttpResponse
+from django.template import loader
 
 
 # class NoteListCreate(generics.ListCreateAPIView):
@@ -27,3 +29,15 @@ class CreateUserView(generics.CreateAPIView):
 
     def get_queryset(self):
         return User.objects.all()
+    
+def loadeventlist(request):
+    template = loader.get_template("events_list.html")
+    return HttpResponse(template.render())
+
+def loadeventcreator(request):
+    template = loader.get_template("create_event.html")
+    return HttpResponse(template.render())
+
+def loadeventbrowser(request):
+    template = loader.get_template("browse_events.html")
+    return HttpResponse(template.render())

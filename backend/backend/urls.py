@@ -12,5 +12,5 @@ urlpatterns = [
     path("api/token/", TokenObtainPairView.as_view(), name="get_token"), # This route "/api/token/" allows users to log in and receive a JWT token (access + refresh)
     path("api/token/refresh/", TokenRefreshView.as_view(), name="refresh"), # This route "/api/token/refresh/" lets a user refresh their JWT token if it expires
     path("api-auth/", include("rest_framework.urls")), 
-    path("api/", include("api.urls")), #includes urls from the api app
+    path("", include("api.urls")), #includes urls from the api app
 ]
