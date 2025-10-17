@@ -2,10 +2,12 @@
 - Each class here represents a table in your MySQL database.
 - Each attribute (field) in the class represents a column in that table."""
 
-
+from django.utils import timezone
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import User # Link data to specific users
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth import get_user_model
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -59,3 +61,18 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     class Meta:
         db_table = 'users'
+
+# Function that creates event with fields that will convert in to database table
+User = get_user_model()
+
+class Event(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    location = models.CharField(max_length=255)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='events')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title

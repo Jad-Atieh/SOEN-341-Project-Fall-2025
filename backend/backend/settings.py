@@ -108,7 +108,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = 'api.User'
+AUTH_USER_MODEL = 'api.auth_user'
 
 
 # Password validation
