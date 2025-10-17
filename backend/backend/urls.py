@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.urls import path, include
 from api.views import CreateUserView
 from api.views import LoginUserView
+from events.views import EventListView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -15,4 +16,6 @@ urlpatterns = [
     path("api/token/refresh/", TokenRefreshView.as_view(), name="refresh"), # This route "/api/token/refresh/" lets a user refresh their JWT token if it expires
     path("api-auth/", include("rest_framework.urls")), 
     path("api/", include("api.urls")), #includes urls from the api app
+    #path("api/events/", EventListView.as_view(), name="event-list"), #includes urls from the events app
+    path('api/events/', include('events.urls')), #includes urls from the events app
 ]
