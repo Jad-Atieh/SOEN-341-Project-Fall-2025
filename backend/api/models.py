@@ -17,45 +17,37 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db) # save to database
         return user
 
-    # for users w/ admin permissions
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('role', 'admin')
-        extra_fields.setdefault('status', 'active')
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        
-        return self.create_user(email, password, **extra_fields)
+#     def __str__(self):
+#         return self.title
+from django.db import models
+from django.contrib.auth.models import User
 
-class User(AbstractBaseUser, PermissionsMixin):
+class Profile(models.Model):
     ROLE_CHOICES = [
         ('student', 'Student'),
-        ('organizer', 'Organizer'),
+        ('teacher', 'Teacher'),
         ('admin', 'Admin'),
     ]
-    
+
     STATUS_CHOICES = [
-        ('active', 'Active'),
         ('pending', 'Pending'),
-        ('suspended', 'Suspended'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
     ]
-    
-    email = models.EmailField(unique=True)
-    name = models.CharField(max_length=255)
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-    
-    objects = CustomUserManager()
-    
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name']
-    
+
     def __str__(self):
-        return f"{self.name} ({self.email})"
-    
-    class Meta:
-        db_table = 'users'
+        return f"{self.user.username} ({self.role})"
+
+
+class Task(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.title
