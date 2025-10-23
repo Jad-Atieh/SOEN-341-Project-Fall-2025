@@ -88,10 +88,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def save(self, *args, **kwargs):
         """
         Automatically handle activation logic based on user role and status.
-        - Organizers with pending approval are deactivated.
+        - Organizers with suspended approval are deactivated.
         - Active users remain active.
         """
-        if self.role == 'organizer' and self.status == 'pending':
+        if self.role == 'organizer' and self.status == 'suspended':
             self.is_active = False
         elif self.status == 'active':
             self.is_active = True

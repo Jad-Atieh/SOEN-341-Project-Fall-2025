@@ -34,8 +34,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         """Create a new user with role-based logic."""
         role = validated_data.get('role', 'student')
 
-        # Organizer accounts start as 'pending', students as 'active'
-        status = 'pending' if role == 'organizer' else 'active'
+        # Organizer accounts start as 'suspended', students as 'active'
+        status = 'suspended' if role == 'organizer' else 'active'
 
         #print(validated_data)
 

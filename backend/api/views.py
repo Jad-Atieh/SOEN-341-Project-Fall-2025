@@ -30,7 +30,7 @@ class CreateUserView(generics.CreateAPIView):
     """
     Handles new user registration.
     - Students are created with role='student' and status='active'.
-    - Organizers are created with role='organizer' and status='pending'.
+    - Organizers are created with role='organizer' and status='suspended'.
     """
 
     serializer_class = RegisterSerializer
@@ -44,7 +44,7 @@ class CreateUserView(generics.CreateAPIView):
 
         return Response({
             "id": user.id,
-            "username": user.username,
+            "name": user.name,
             "role": user.role,
             "status": user.status
         }, status=status.HTTP_201_CREATED)
@@ -160,7 +160,7 @@ class UserListView(generics.ListAPIView):
 
 class ApproveOrganizerView(generics.UpdateAPIView):
     """
-    Allows admins to approve pending organizer accounts.
+    Allows admins to approve suspended organizer accounts.
     - Only admins can approve.
     """
 
@@ -169,7 +169,7 @@ class ApproveOrganizerView(generics.UpdateAPIView):
 
     def get_queryset(self):
         """Only show organizers waiting for approval."""
-        return User.objects.filter(role='organizer', status='pending')
+        return User.objects.filter(role='organizer', status='suspended')
 
     def perform_update(self, serializer):
         """Approve an organizer (activate their account)."""
