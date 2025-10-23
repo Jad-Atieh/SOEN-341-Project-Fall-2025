@@ -1,16 +1,29 @@
-""" URLs: Connects paths (like /api/register/) to views.
- - When a request hits a URL, Django checks which view to run."""
+"""
+urls.py
+---------
+Purpose: Define how HTTP paths (like /api/register/ or /admin/)
+are mapped to specific Django views.
+
+When a request hits a URL, Django checks this list (urlpatterns)
+to determine which view should handle it.
+"""
 
 from django.contrib import admin
 from django.urls import path, include
-from api.views import CreateUserView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    path("admin/", admin.site.urls), # This creates the route "/admin/" which opens Django's built-in admin dashboard
-    path("api/user/signup/", CreateUserView.as_view(), name="signup"), # When someone sends this request: "/api/user/register/", it will be handled by the fucntion CreateUserView
-    path("api/token/", TokenObtainPairView.as_view(), name="get_token"), # This route "/api/token/" allows users to log in and receive a JWT token (access + refresh)
-    path("api/token/refresh/", TokenRefreshView.as_view(), name="refresh"), # This route "/api/token/refresh/" lets a user refresh their JWT token if it expires
-    path("api-auth/", include("rest_framework.urls")), 
-    path("api/", include("api.urls")), #includes urls from the api app
+    # Admin dashboard route (default Django admin panel)
+    path("admin/", admin.site.urls),
+
+    # Main API routes (delegates URL handling to 'api/urls.py')
+    path("api/", include("api.urls")),
+
+    # Django REST Framework’s built-in login/logout views (useful for the browsable API)
+    path("api-auth/", include("rest_framework.urls")),
+
+    # Optional: JWT authentication endpoints (for login/refreshing tokens)
+    # Uncomment if you want to enable JWT endpoints globally:
+    # path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    # path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
