@@ -7,8 +7,10 @@ from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Event
+from .models import Ticket
 from .serializers import UserSerializer
 from .serializers import EventSerializer
+from .serializers import TicketSerializer
 from .permissions import IsAdmin, IsStudentOrAdmin
 
 # class NoteListCreate(generics.ListCreateAPIView):
@@ -49,3 +51,21 @@ class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
             return [IsAdmin()]
         return [IsStudentOrAdmin()]
+    
+class TicketListCreateView(generics.ListCreateAPIView):
+    serializer_class = TicketSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+       return Ticket.objects.filter(user=self.request.user) # users can only see their own tickets
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user) # auto assign the current user
+
+class TicketDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TicketSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Users can only access their own tickets
+        return Ticket.objects.filter(user=self.request.user)

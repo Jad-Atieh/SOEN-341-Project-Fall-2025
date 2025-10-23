@@ -5,6 +5,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import Event
+from .models import Ticket
 
 User = get_user_model()
 
@@ -33,6 +34,21 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event # Specify the model to be serialized
         fields = '__all__' # Fields to be included in the user representation
+
+class TicketSerializer(serializers.ModelSerializer):
+    event_title = serializers.CharField(source='event.title', read_only=True)
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    is_valid = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = Ticket
+        fields = [
+            'id', 'event', 'event_title', 'user', 'user_name', 'user_email',
+            'qr_code', 'status', 'claimed_at', 'used_at', 'is_valid'
+        ]
+        read_only_fields = ('claimed_at', 'used_at', 'qr_code')
+    
 
 #sample serializer for notes - creates a note with specific fields and makes author read only
 # class NoteSerializer(serializers.ModelSerializer):

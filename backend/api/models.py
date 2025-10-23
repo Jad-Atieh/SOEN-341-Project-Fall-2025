@@ -78,3 +78,63 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
+
+class Ticket(models.Model):
+    STATUS_CHOICES = [ # options for status field
+        ('active', 'Active'),
+        ('used', 'Used'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    # foreign keys, refer to other models
+    event = models.ForeignKey(
+        'Event',
+        on_delete=models.CASCADE, # if event is deleted, delete its tickets too
+        related_name='tickets'
+    )
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE, # same as for evenets
+        related_name='tickets'
+    )
+    
+    # QR code for ticket validation
+    qr_code = models.CharField(
+        max_length=255, 
+        unique=True,
+        help_text="Unique QR code for ticket validation"
+    )
+    
+    # status tracking
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='active'
+    )
+    
+    # timestamps
+    claimed_at = models.DateTimeField(auto_now_add=True) 
+    used_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Ticket #{self.id} - {self.user.name} for {self.event.title}"
+    
+    def mark_as_used(self):
+        # mark ticket as used and set used_at timestamp
+        self.status = 'used'
+        self.used_at = timezone.now()
+        self.save()
+    
+    def mark_as_cancelled(self):
+        # mark ticket as cancelled
+        self.status = 'cancelled'
+        self.save()
+    
+    def is_valid(self):
+        # check if ticket is valid
+        return self.status == 'active' and self.event.is_active
+    
+    class Meta:
+        db_table = 'tickets'
+        ordering = ['-claimed_at'] # newest tickets first
