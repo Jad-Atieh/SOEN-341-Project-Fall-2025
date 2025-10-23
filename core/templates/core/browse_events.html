@@ -2,42 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Browse Events</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Events</title>
   <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
   <header>
-    <h1>Browse Events</h1>
+    <h1>Campus Events</h1>
   </header>
 
   <section class="events">
-    <div class="event-card">
-      <h3>Hackathon 2025</h3>
-      <p><strong>Date:</strong> 2025-11-10</p>
-      <p><strong>Location:</strong> Concordia EV Building</p>
-      <p>Collaborate and innovate in our annual student hackathon!</p>
-      <button>Register</button>
-    </div>
+    <h2>Upcoming Events</h2>
 
-    <div class="event-card">
-      <h3>Career Fair</h3>
-      <p><strong>Date:</strong> 2025-11-25</p>
-      <p><strong>Location:</strong> Hall Building</p>
-      <p>Meet top recruiters and explore internship opportunities.</p>
-      <button>Register</button>
-    </div>
+    {% for event in events %}
+      <div class="event-card">
+        <h3>{{ event.title }}</h3>
+        <p><strong>Date:</strong> {{ event.date }}</p>
+        <p><strong>Location:</strong> {{ event.location }}</p>
+        <p>{{ event.description }}</p>
 
-    <div class="event-card">
-      <h3>Wellness Workshop</h3>
-      <p><strong>Date:</strong> 2025-12-03</p>
-      <p><strong>Location:</strong> Online</p>
-      <p>Learn techniques to reduce stress and improve balance.</p>
-      <button disabled>Sold Out</button>
-    </div>
+        {% if event.seats_taken >= event.capacity %}
+          <p class="sold-out">Sold Out</p>
+          <button disabled>View Details</button>
+        {% elif event.seats_taken|floatformat:0 >= event.capacity|add:"-10" %}
+          <p class="nearly-full">Only a few seats left!</p>
+          <button>View Details</button>
+        {% else %}
+          <button>Register</button>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p>No events available yet.</p>
+    {% endfor %}
   </section>
 </body>
-<<<<<<< HEAD
 </html>
-=======
-</html>
->>>>>>> 04487bb (init)
