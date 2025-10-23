@@ -1,43 +1,30 @@
-"""Views: These handle HTTP requests (GET, POST, PUT, DELETE).
-- Each class corresponds to an API endpoint that does something (like register a user)."""
-
+"""
+Views: These handle HTTP requests (GET, POST, PUT, DELETE).
+- Each class corresponds to an API endpoint that does something (like register a user).
+"""
 
 from django.shortcuts import render
 from django.contrib.auth import get_user_model, authenticate
-from rest_framework import generics
-from .serializers import UserSerializer
+from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
-from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-
-
-from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
-
+from .serializers import UserSerializer
 
 User = get_user_model()
 
-# class NoteListCreate(generics.ListCreateAPIView):
-#     serializer_class = NoteSerializer - checks if data is valid
-#     permission_classes = [IsAuthenticated] - only users with a token can access this view
 
-    #gets notes from a specific user
-#     def get_queryset(self):
-#         user = self.request.user 
-#         return Note.objects.filter(author=user)
-
+# Create User (Signup)
 class CreateUserView(generics.CreateAPIView):
-#    queryset = User.objects.all() # Specify the queryset for user objects
-    serializer_class = UserSerializer # What kidve of serializer to use (data accepted to make a new user)
-    permission_classes = [AllowAny] # Allow any user (authenticated or not) to access this view
+    serializer_class = UserSerializer  # What kind of serializer to use (data accepted to make a new user)
+    permission_classes = [AllowAny]    # Allow any user (authenticated or not) to access this view
 
     def get_queryset(self):
         return User.objects.all()
-    
 
-#Login API
+
+# Login User (JWT Authentication)
 class LoginUserView(APIView):
     permission_classes = [AllowAny]  # Allow any user (authenticated or not) to access this view
 
@@ -46,13 +33,14 @@ class LoginUserView(APIView):
         password = request.data.get('password')
 
         if not email or not password:
-            return Response({'error': 'Email and password are required'}, status=400)
+            return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(username=email, password=password)
         if user:
-            token, created = Token.objects.get_or_create(user=user)
+            refresh = RefreshToken.for_user(user)
             return Response({
-                'token': token.key,
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
                 'user': {
                     'id': user.id,
                     'email': user.email,
@@ -60,7 +48,6 @@ class LoginUserView(APIView):
                     'role': user.role,
                     'status': user.status
                 }
-            })
+            }, status=status.HTTP_200_OK)
         else:
-            return Response({'error': 'Invalid Credentials'}, status=400)
-        
+            return Response({'error': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)

@@ -1,107 +1,100 @@
-/**
- * Form Component
- *
- * This React component handles both user login and signup forms.
- * For signup, it collects username, email, password, and role (student, organizer, admin).
- * For login, it collects email and password only.
- * On login, it stores JWT tokens in localStorage and redirects to the home/events page.
- * On signup, it redirects the user to the login page after successful registration.
- */
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom"; // 👈 for redirect
 
-import { useState } from "react";
-import api from "../api";
-import { useNavigate } from "react-router-dom";
-import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
-import "../styles/Forms.css"
-import LoadingIndicator from "./LoadingIndicator";
-
-function Form({ route, method }) {
-  const [username, setUsername] = useState("");
+function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student"); // default role
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-
-  const name = method === "login" ? "Login" : "Sign Up";
+  const [error, setError] = useState("");
+  const navigate = useNavigate(); // 👈 hook to navigate
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
     try {
-      const data =
-        method === "login"
-          ? { email, password }
-          : { username, email, password, role };
+      const res = await axios.post("http://127.0.0.1:8000/api/token/", {
+        email,
+        password,
+      });
 
-      const res = await api.post(route, data);
+      localStorage.setItem("access", res.data.access);
+      localStorage.setItem("refresh", res.data.refresh);
 
-      if (method === "login") {
-        localStorage.setItem(ACCESS_TOKEN, res.data.access);
-        localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
-        navigate("/"); 
-      } else {
-        navigate("/login"); 
-      }
-    } catch (error) {
-      alert(error);
-    } finally {
-      setLoading(false);
+      navigate("/events"); // redirect to events list
+    } catch (err) {
+      setError("Invalid credentials");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form-container">
-      <h1>{name}</h1>
-
-      {method === "signup" && (
+    <div style={styles.container}>
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <h2 style={styles.title}>Login</h2>
+        {error && <p style={styles.error}>{error}</p>}
         <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="form-input"
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={styles.input}
           required
         />
-      )}
-
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="form-input"
-        required
-      />
-
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="form-input"
-        required
-      />
-
-      {method === "signup" && (
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          className="form-input"
-        >
-          <option value="student">Student</option>
-          <option value="organizer">Organizer</option>
-        </select>
-      )}
-
-       {loading && <LoadingIndicator />}
-
-      <button type="submit" className="form-button">
-        {name}
-      </button>
-    </form>
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={styles.input}
+          required
+        />
+        <button type="submit" style={styles.button}>
+          Login
+        </button>
+      </form>
+    </div>
   );
 }
 
-export default Form;
+const styles = {
+  container: {
+    height: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "#f0f2f5",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    padding: "2rem",
+    background: "#fff",
+    borderRadius: "12px",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+    width: "300px",
+  },
+  title: {
+    textAlign: "center",
+    marginBottom: "1rem",
+  },
+  input: {
+    marginBottom: "1rem",
+    padding: "0.75rem",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    fontSize: "1rem",
+  },
+  button: {
+    padding: "0.75rem",
+    borderRadius: "8px",
+    border: "none",
+    background: "#4a90e2",
+    color: "white",
+    fontSize: "1rem",
+    cursor: "pointer",
+  },
+  error: {
+    color: "red",
+    textAlign: "center",
+  },
+};
+
+export default Login;
