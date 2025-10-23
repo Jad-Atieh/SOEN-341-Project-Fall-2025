@@ -97,14 +97,13 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "soen341",
-        "USER": "thanusan11",
-        "PASSWORD": "soen341team1",
-        "HOST": "localhost",   # or DB host
-        "PORT": "3306",
-        "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'testdb',        # or whatever your database name is
+        'USER': 'root',          # XAMPP default user
+        'PASSWORD': '',          # leave empty unless you set one
+        'HOST': '127.0.0.1',
+        'PORT': '3306',          
     }
 }
 
@@ -141,7 +140,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
@@ -154,3 +152,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWS_CREDENTIALS = True
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

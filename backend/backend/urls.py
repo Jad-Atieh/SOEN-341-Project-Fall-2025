@@ -5,12 +5,16 @@ from django.contrib import admin
 from django.urls import path, include
 from api.views import CreateUserView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
-    path("admin/", admin.site.urls), # This creates the route "/admin/" which opens Django's built-in admin dashboard
     path("api/user/signup/", CreateUserView.as_view(), name="signup"), # When someone sends this request: "/api/user/register/", it will be handled by the fucntion CreateUserView
     path("api/token/", TokenObtainPairView.as_view(), name="get_token"), # This route "/api/token/" allows users to log in and receive a JWT token (access + refresh)
     path("api/token/refresh/", TokenRefreshView.as_view(), name="refresh"), # This route "/api/token/refresh/" lets a user refresh their JWT token if it expires
     path("api-auth/", include("rest_framework.urls")), 
-    path("api/", include("api.urls")), #includes urls from the api app
+    path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

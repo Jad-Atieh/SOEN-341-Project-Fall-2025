@@ -34,3 +34,24 @@ class UserSerializer(serializers.ModelSerializer):
 #         model = Note
 #         fields = ["id", "title", "content", "created_at", "author"]
 #         extra_kwargs = {"author": {"read_only": True}}
+from .models import Event
+from .models import Task
+from rest_framework import serializers
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = '__all__'
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+from .models import Profile
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = '__all__'
