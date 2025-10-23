@@ -18,6 +18,7 @@ function Login() {
       localStorage.setItem("access", res.data.access);
       localStorage.setItem("refresh", res.data.refresh);
       alert("Login successful!");
+      window.location.href = "/events"; // 👈 add this line if you want it to redirect to events
     } catch (err) {
       setError("Invalid credentials");
     }

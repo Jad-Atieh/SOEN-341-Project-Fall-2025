@@ -59,7 +59,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "api",
     "rest_framework",
-    "rest_framework.authtoken",
     "corsheaders",
 ]
 
@@ -101,8 +100,8 @@ DATABASES = {
      "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "soen341",
-        "USER": "root",
-        "PASSWORD": "",
+        "USER": "thanusan11",
+        "PASSWORD": "soen341team1",
         "HOST": "localhost",   # or DB host
         "PORT": "3306",
         "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},

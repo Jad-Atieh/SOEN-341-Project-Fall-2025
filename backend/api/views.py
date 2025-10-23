@@ -1,32 +1,24 @@
-"""
-Views: These handle HTTP requests (GET, POST, PUT, DELETE).
-- Each class corresponds to an API endpoint that does something (like register a user).
-"""
-
-from django.shortcuts import render
-from django.contrib.auth import get_user_model, authenticate
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer
+from .models import User
 
-User = get_user_model()
-
-
-# Create User (Signup)
+# Create new users
 class CreateUserView(generics.CreateAPIView):
-    serializer_class = UserSerializer  # What kind of serializer to use (data accepted to make a new user)
-    permission_classes = [AllowAny]    # Allow any user (authenticated or not) to access this view
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         return User.objects.all()
 
 
-# Login User (JWT Authentication)
+# Login user (JWT authentication)
 class LoginUserView(APIView):
-    permission_classes = [AllowAny]  # Allow any user (authenticated or not) to access this view
+    permission_classes = [AllowAny]
 
     def post(self, request):
         email = request.data.get('email')
@@ -50,4 +42,4 @@ class LoginUserView(APIView):
                 }
             }, status=status.HTTP_200_OK)
         else:
-            return Response({'error': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
