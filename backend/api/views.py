@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Event
 from .serializers import UserSerializer
 from .serializers import EventSerializer
+from .permissions import IsAdmin, IsStudentOrAdmin
 
 # class NoteListCreate(generics.ListCreateAPIView):
 #      serializer_class = NoteSerializer # checks if data is valid
@@ -32,9 +33,19 @@ class CreateUserView(generics.CreateAPIView):
 class EventListCreateView(generics.ListCreateAPIView):
     queryset = Event.objects.all() # Specify the queryset for event objects
     serializer_class = EventSerializer # What kind of serializer to use (data accepted to make a new event)
-    permission_classes = [AllowAny]  # adjust later based on RBAC
+    #permission_classes = [AllowAny]  # adjust later based on RBAC
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAdmin()]
+        return [IsStudentOrAdmin()]
 
 class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.all() # Specify the queryset for event objects
     serializer_class = EventSerializer # What kind of serializer to use (data accepted to make a new event)
-    permission_classes = [AllowAny] # Allow any user (authenticated or not) to access this view
+    #permission_classes = [AllowAny] # Allow any user (authenticated or not) to access this view
+
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            return [IsAdmin()]
+        return [IsStudentOrAdmin()]

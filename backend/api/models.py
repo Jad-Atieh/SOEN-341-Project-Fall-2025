@@ -71,8 +71,10 @@ class Event(models.Model):
     location = models.CharField(max_length=255)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
+    is_discovered = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='events')
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
