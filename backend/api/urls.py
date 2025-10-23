@@ -1,15 +1,20 @@
 from django.urls import path
-from .views import CreateUserView, LoginUserView, NoteListCreate, NoteDelete
+from .views import (
+    CreateUserView,
+    LoginUserView,
+    EventListCreateView,
+    EventDetailView,
+)
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    # Auth routes
+    # Authentication
     path("register/", CreateUserView.as_view(), name="register"),
+    path("login/", LoginUserView.as_view(), name="login"),
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("login/", LoginUserView.as_view(), name="login"),
 
-    # Notes routes
-    path("notes/", NoteListCreate.as_view(), name="note-list"),
-    path("notes/delete/<int:pk>/", NoteDelete.as_view(), name="delete-note"),
+    # Events
+    path("events/", EventListCreateView.as_view(), name="event-list-create"),
+    path("events/<int:pk>/", EventDetailView.as_view(), name="event-detail"),
 ]

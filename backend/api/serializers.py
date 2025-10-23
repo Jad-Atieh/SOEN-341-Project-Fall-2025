@@ -4,6 +4,7 @@
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from .models import Event
 
 User = get_user_model()
 
@@ -15,8 +16,8 @@ class UserSerializer(serializers.ModelSerializer):
     
     # Method to create a user with data input
     def create(self, validated_data):
-        #print(validated_data)
-        #user = User.objects.create_user(**validated_data) # Create a new user instance usiign the validated data
+        print(validated_data)
+        user = User.objects.create_user(**validated_data) # Create a new user instance using the validated data
         
         # from our CustomUserManager
         user = User.objects.create_user(
@@ -28,9 +29,14 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event # Specify the model to be serialized
+        fields = '__all__' # Fields to be included in the user representation
+
 #sample serializer for notes - creates a note with specific fields and makes author read only
 # class NoteSerializer(serializers.ModelSerializer):
 #     class Meta:
-#         model = Note
+#         model = None
 #         fields = ["id", "title", "content", "created_at", "author"]
 #         extra_kwargs = {"author": {"read_only": True}}
