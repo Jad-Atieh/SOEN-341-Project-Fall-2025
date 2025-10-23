@@ -1,42 +1,97 @@
-"""Serializer: Converts Django model instances <-> JSON data.
- - Takes JSON from frontend and converts it to Python objects (for saving in DB)
- - Takes Python objects from backend and converts to JSON (for sending to frontend)"""
+"""
+serializers.py
+---------Purpose:
+Serializers convert Django model instances <-> JSON data.
+
+They serve two main purposes:
+1. Take JSON data from the frontend and convert it into Python objects for saving to the database.
+2. Take Python objects from the backend and convert them into JSON for sending to the frontend.
+"""
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import Event
+from .models import User, Event, Ticket
 
+# Get the custom User model
 User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User # Specify the model to be serialized
-        fields = ["id", "email", "name", "password", "role", "status"] # Fields to be included in the user representation
-        extra_kwargs = {"password": {"write_only": True}} # Make the password 
-    
-    # Method to create a user with data input
-    def create(self, validated_data):
-        print(validated_data)
-        user = User.objects.create_user(**validated_data) # Create a new user instance using the validated data
-        
-        # from our CustomUserManager
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            name=validated_data['name'],
-            password=validated_data['password'],
-            role=validated_data.get('role', 'student')  # default to student
-        )
+# -------------------------------
+# USER REGISTRATION SERIALIZER
+# -------------------------------
+class RegisterSerializer(serializers.ModelSerializer):
+    """
+    Handles user registration.
+    - Automatically sets role and status based on input.
+    - Ensures passwords are write-only for security.
+    """
 
+    class Meta:
+        model = User
+        fields = ["id", "email", "name", "password", "role", "status"]
+        extra_kwargs = {"password": {"write_only": True}}
+
+    def create(self, validated_data):
+        """Create a new user with role-based logic."""
+        role = validated_data.get('role', 'student')
+
+        # Organizer accounts start as 'suspended', students as 'active'
+        status = 'suspended' if role == 'organizer' else 'active'
+
+        #print(validated_data)
+
+        # Create user using the CustomUserManager logic
+        user = User.objects.create_user(
+            name=validated_data['name'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            role=role,
+            status=status,
+        )
+        user.save()
         return user
 
+# -------------------------------
+# EVENT SERIALIZER
+# -------------------------------
 class EventSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Event # Specify the model to be serialized
-        fields = '__all__' # Fields to be included in the user representation
+    """
+    Converts Event model instances <-> JSON.
+    Includes organizer info and marks certain fields as read-only.
+    """
 
-#sample serializer for notes - creates a note with specific fields and makes author read only
-# class NoteSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = None
-#         fields = ["id", "title", "content", "created_at", "author"]
-#         extra_kwargs = {"author": {"read_only": True}}
+    organizer = serializers.StringRelatedField(read_only=True)  # Show organizer name instead of ID
+    class Meta:
+        model = Event
+        fields = '__all__'
+        read_only_fields = ['organizer', 'created_at']
+
+# -------------------------------
+# TICKET SERIALIZER
+# -------------------------------
+class TicketSerializer(serializers.ModelSerializer):
+    """
+    Converts Ticket model instances <-> JSON.
+    - User field is read-only (taken from authenticated user).
+    """
+
+    user = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Ticket
+        fields = '__all__'
+        read_only_fields = ['user', 'claimed_at']
+
+# -------------------------------
+# USER SERIALIZER (For Admin Use)
+# -------------------------------
+class UserSerializer(serializers.ModelSerializer):
+    """
+    Used by Admins to view or manage users.
+    - Includes key user info.
+    - is_active is read-only (controlled by role/status).
+    """
+
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'email', 'role', 'status', 'is_active']
+        read_only_fields = ['is_active']
