@@ -69,7 +69,8 @@ class LoginUserView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user = authenticate(username=email, password=password)
+        user = authenticate(request, email=email, password=password)
+        
         if user:
             refresh = RefreshToken.for_user(user)
             return Response(

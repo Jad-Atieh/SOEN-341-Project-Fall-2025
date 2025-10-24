@@ -19,7 +19,7 @@ urlpatterns = [
 
     # User authentication routes
     path("api/user/signup/", CreateUserView.as_view(), name="signup"),
-    path("login/", LoginUserView.as_view(), name="login"),
+    path("api/login/", LoginUserView.as_view(), name="login"),
 
     # JWT token endpoints
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
