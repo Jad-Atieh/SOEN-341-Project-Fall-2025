@@ -13,7 +13,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.contrib.auth import get_user_model
 
 # ============================================================
-# CUSTOM USER MODEL AND MANAGER
+# CUSTOM USER MANAGER
 # ============================================================
 
 class CustomUserManager(BaseUserManager):
@@ -28,7 +28,7 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('The email field must be filled out.')
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
-        user.set_password(password)  # Hash the password before saving
+        user.set_password(password)  # Securely hash the password before saving
         user.save(using=self._db)
         return user
 
@@ -41,7 +41,10 @@ class CustomUserManager(BaseUserManager):
         
         return self.create_user(email, password, **extra_fields)
 
-# Custom User model with roles
+# ============================================================
+# CUSTOM USER MODEL
+# ============================================================
+
 class User(AbstractBaseUser, PermissionsMixin):
     """
     Custom User model with Role-Based Access Control (RBAC) support.
@@ -49,7 +52,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     Roles:
     - student: Can view and claim tickets.
     - organizer: Can create/manage events (requires admin approval).
-    - admin: Can approve organizers and manage all users.
+    - admin: Can approve/suspend users and manage all data.
     """
 
     ROLE_CHOICES = [
@@ -70,12 +73,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # RBAC-related fields
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
     # System fields
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 
     # Custom manager
@@ -88,18 +91,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     def save(self, *args, **kwargs):
         """
         Automatically handle activation logic based on user role and status.
-        - Organizers with suspended approval are deactivated.
-        - Active users remain active.
+        - New student/organizer accounts default to 'pending' and inactive.
+        - Only 'active' users are marked is_active=True.
+        - Suspended users are automatically deactivated.
         """
-        if self.role == 'organizer' and self.status == 'suspended':
-            self.is_active = False
-        elif self.status == 'active':
+        if self.status == 'active':
             self.is_active = True
+        elif self.status in ['pending', 'suspended']:
+            self.is_active = False
         super(User, self).save(*args, **kwargs)
 
     def __str__(self):
         """Return a readable string representation of the user."""
-        return f"{self.name} ({self.role})"
+        return f"{self.name} ({self.role}, {self.status})"
     
     class Meta:
         db_table = 'users' # Explicit table name in MySQL
@@ -144,7 +148,7 @@ class Event(models.Model):
 
     def __str__(self):
         """Readable representation of the event."""
-        return self.title
+        return f"{self.title} ({self.organization})"
 
 # ============================================================
 # TICKET MODEL
@@ -165,4 +169,4 @@ class Ticket(models.Model):
 
     def __str__(self):
         """Readable representation of a ticket claim."""
-        return f"{self.user.username} - {self.event.title}"
+        return f"{self.user.name} → {self.event.title}"
