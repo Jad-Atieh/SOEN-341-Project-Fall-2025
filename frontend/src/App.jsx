@@ -1,47 +1,29 @@
-import React from "react";
-import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
+import EventsList from "./pages/EventsList.jsx";
+import CreateEvent from "./pages/CreateEvent.jsx";
+import EventDetails from "./pages/EventDetails.jsx";
 
-// Pages
-import Signup from "./pages/Signup";
-import Login from "./pages/Login";
-import EventsList from "./pages/EventsList";
-import AdminDashboard from "./pages/AdminDashboard";
-import NotFound from "./pages/NotFound";
-import Home from "./pages/Home";
-
-// Components
-import ProtectedRoute from "./components/ProtectedRoute";
-
-// Logout function
-function Logout() {
-  localStorage.clear(); // Clear tokens
-  return <Navigate to="/login" />; // Redirect to login
+function Nav() {
+  return (
+    <nav style={{ padding: "8px 16px", background: "#0b5bd3" }}>
+      <Link to="/" style={{ color: "#fff", marginRight: 16 }}>Home</Link>
+      <Link to="/events" style={{ color: "#fff", marginRight: 16 }}>Browse Events</Link>
+      <Link to="/create" style={{ color: "#fff" }}>Create Event</Link>
+    </nav>
+  );
 }
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
-      <nav>
-        <Link to="/">Home</Link>
-      </nav>
+      <Nav />
       <Routes>
-        {/* Home page defaults to EventsList for logged-in users */}
-        <Route path="" element={<Home />} />
-        <Route path="/a" element={<ProtectedRoute> <EventsList /> </ProtectedRoute>} />
-
-        {/* Authentication routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/logout" element={<Logout />} />
-
-        {/* Admin dashboard (protected) */}
-        <Route path="/admin" element={<ProtectedRoute> <AdminDashboard /> </ProtectedRoute>} />
-
-        {/* 404 page */}
-        <Route path="*" element={<NotFound />} />
+        <Route path="/" element={<Navigate to="/events" replace />} />
+        <Route path="/events" element={<EventsList />} />
+        <Route path="/events/:id" element={<EventDetails />} />
+        <Route path="/create" element={<CreateEvent />} />
+        <Route path="*" element={<div style={{ padding: 24 }}>404 Not Found</div>} />
       </Routes>
     </BrowserRouter>
   );
 }
-
-export default App;
