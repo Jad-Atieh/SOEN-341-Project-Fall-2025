@@ -13,6 +13,8 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
+    #home
+    #path("", )
     # Admin dashboard route (default Django admin panel)
     path("admin/", admin.site.urls),
 

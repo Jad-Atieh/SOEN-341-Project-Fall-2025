@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 
 // Pages
 import Signup from "./pages/Signup";
@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import EventsList from "./pages/EventsList";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
+import Home from "./pages/Home";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -20,9 +21,13 @@ function Logout() {
 function App() {
   return (
     <BrowserRouter>
+      <nav>
+        <Link to="/">Home</Link>
+      </nav>
       <Routes>
         {/* Home page defaults to EventsList for logged-in users */}
-        <Route path="/" element={ <ProtectedRoute> <EventsList /> </ProtectedRoute>}/>
+        <Route path="" element={<Home />} />
+        <Route path="/a" element={<ProtectedRoute> <EventsList /> </ProtectedRoute>} />
 
         {/* Authentication routes */}
         <Route path="/login" element={<Login />} />
@@ -30,12 +35,12 @@ function App() {
         <Route path="/logout" element={<Logout />} />
 
         {/* Admin dashboard (protected) */}
-        <Route path="/admin"element={<ProtectedRoute> <AdminDashboard /> </ProtectedRoute> }/>
+        <Route path="/admin" element={<ProtectedRoute> <AdminDashboard /> </ProtectedRoute>} />
 
         {/* 404 page */}
         <Route path="*" element={<NotFound />} />
-        </Routes>
-   </BrowserRouter>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
