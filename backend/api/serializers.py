@@ -28,24 +28,30 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "email", "name", "password", "role", "status"]
-        extra_kwargs = {"password": {"write_only": True}}
+        extra_kwargs = {
+            "password": {"write_only": True},
+            "status": {"read_only": True},  # Status is not user-controlled
+        }
 
     def create(self, validated_data):
-        """Create a new user with role-based logic."""
+        """
+        Create a new user instance.
+        All new accounts (students or organizers) start as:
+        - status = 'pending'
+        - is_active = False
+        until approved by an admin.
+        """
         role = validated_data.get('role', 'student')
-
-        # Organizer accounts start as 'suspended', students as 'active'
-        status = 'suspended' if role == 'organizer' else 'active'
 
         #print(validated_data)
 
-        # Create user using the CustomUserManager logic
+        # Force all new users to start pending
         user = User.objects.create_user(
             name=validated_data['name'],
             email=validated_data['email'],
             password=validated_data['password'],
             role=role,
-            status=status,
+            status='pending',   # Enforced default
         )
         user.save()
         return user
