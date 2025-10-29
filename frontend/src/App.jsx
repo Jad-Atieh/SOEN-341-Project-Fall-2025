@@ -26,8 +26,8 @@ function App() {
       </nav>
       <Routes>
         {/* Home page defaults to EventsList for logged-in users */}
-        <Route path="" element={<Home />} />
-        <Route path="/a" element={<ProtectedRoute> <EventsList /> </ProtectedRoute>} />
+        <Route path="/" element={<Home />} />
+        <Route path="/events" element={<ProtectedRoute> <EventsList /> </ProtectedRoute>} />
 
         {/* Authentication routes */}
         <Route path="/login" element={<Login />} />
