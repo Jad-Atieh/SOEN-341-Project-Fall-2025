@@ -1,0 +1,69 @@
+:root {
+  --bg: #0b1020;
+  --card: #121a33;
+  --muted: #9aa3b2;
+  --text: #eaf0ff;
+  --primary: #4f6cff;
+  --warning: #ffb020;
+  --ok: #34d399;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, var(--bg) 0%, #0e1630 100%);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
+    Helvetica Neue, Arial, Apple Color Emoji, Segoe UI Emoji;
+}
+
+a { color: inherit; }
+
+.container {
+  max-width: 980px;
+  margin: 32px auto;
+  padding: 0 16px;
+}
+
+.page-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: linear-gradient(180deg, var(--card) 0%, #0f1730 100%);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.muted { color: var(--muted); margin: 6px 0; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 38px; padding: 0 14px; border-radius: 10px;
+  text-decoration: none; cursor: pointer; border: 0;
+}
+
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-link { border: 1px solid rgba(255,255,255,.14); color: var(--text); background: transparent; }
+
+.tag { padding: 4px 8px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(255,255,255,.12); }
+.tag.soldout { color: #ffd1d9; background: rgba(255,84,112,.12); border-color: rgba(255,84,112,.35); }
+.tag.warning { color: #fff2d6; background: rgba(255,176,32,.14); border-color: rgba(255,176,32,.35); }
+.tag.ok { color: #d1fae5; background: rgba(52,211,153,.12); border-color: rgba(52,211,153,.35); }
+
+.form { display: grid; gap: 10px; max-width: 560px; }
+.form input, .form textarea {
+  width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.14);
+  background: rgba(15, 23, 48, .6); color: var(--text);
+}
+.row { display: flex; align-items: center; }
+.row.between { justify-content: space-between; }
+.gap { gap: 10px; }
