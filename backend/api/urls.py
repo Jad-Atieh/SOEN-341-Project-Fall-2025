@@ -63,6 +63,10 @@ urlpatterns = [
     # Endpoint: POST /api/tickets/claim/
     # → Allows students to claim tickets for an event.
 
+    # -------------------------------
+    # DASHBOARD
+    # -------------------------------
+    path('dashboard/student/', student_dashboard, name='student-dashboard'),
 
     # -------------------------------
     # JWT AUTHENTICATION (LOGIN & TOKEN REFRESH)
