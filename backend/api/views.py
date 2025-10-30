@@ -53,6 +53,47 @@ class CreateUserView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 # ------------------------------------
+# USER LOGIN (JWT)
+# ------------------------------------
+class LoginUserView(APIView):
+    """Handles JWT login."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        password = request.data.get("password")
+
+        if not email or not password:
+            return Response(
+                {"error": "Email and password are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = authenticate(request, email=email, password=password)
+        
+        if user:
+            refresh = RefreshToken.for_user(user)
+            return Response(
+                {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                    "user": {
+                        "id": user.id,
+                        "email": user.email,
+                        "name": user.name,
+                        "role": user.role,
+                        "status": user.status,
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"error": "Invalid credentials"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+# ------------------------------------
 # EVENT MANAGEMENT (LIST + CREATE)
 # ------------------------------------
 class EventListCreateView(generics.ListCreateAPIView):
