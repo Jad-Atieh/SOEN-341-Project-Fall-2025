@@ -1,8 +1,7 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
+import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 
 // Pages
 import Signup from "./pages/Signup";
@@ -15,42 +14,55 @@ import Home from "./pages/Home";
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// Logout function
+// logout function
 function Logout() {
-  localStorage.clear(); // Clear tokens
-  return <Navigate to="/login" />; // Redirect to login
+  localStorage.clear();
+  toast.info("You have signed out!");
+  return <Navigate to="/login" />;
+}
+
+function Navbar() {
+  const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem("access_token");
+
+  const handleLogout = () => {
+    localStorage.clear();
+    toast.success("Logged out successfully!");
+    navigate("/login");
+  };
+
+  return (
+    <nav className="nav-bar">
+      <Link to="/">Home</Link>
+
+      {isLoggedIn ? (
+        <>
+          <Link to="/events">Events</Link>
+          <button onClick={handleLogout} className="logout-btn">Sign Out</button>
+        </>
+      ) : (
+        <>
+          <Link to="/login">Login</Link>
+          <Link to="/signup">Signup</Link>
+        </>
+      )}
+    </nav>
+  );
 }
 
 function App() {
   return (
     <BrowserRouter>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <Navbar />
 
-    <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            pauseOnHover
-          />
-      
-      <nav>
-        <Link to="/"> Return Home</Link>
-      </nav>
       <Routes>
-        {/* Home page defaults to EventsList for logged-in users */}
         <Route path="/" element={<Home />} />
-        <Route path="/events" element={<ProtectedRoute> <EventsList /> </ProtectedRoute>} />
-
-        {/* Authentication routes */}
+        <Route path="/events" element={<ProtectedRoute><EventsList /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/logout" element={<Logout />} />
-
-        {/* Admin dashboard (protected) */}
-        <Route path="/admin" element={<ProtectedRoute> <AdminDashboard /> </ProtectedRoute>} />
-
-        {/* 404 page */}
+        <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
