@@ -13,6 +13,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from . import views
 from .views import (
     CreateUserView,
+    LoginUserView,
     EventListCreateView,
     EventDetailView,
     UserListView,
@@ -27,6 +28,10 @@ urlpatterns = [
     path("user/signup/",CreateUserView.as_view(),name="signup"),
     # Endpoint: POST /api/user/signup/
     # → Registers a new user (student or organizer).
+
+    path("user/login/", LoginUserView.as_view(), name="login"),
+    # Endpoint: POST /api/user/login/
+    # → login existing user.
 
 
     # -------------------------------
