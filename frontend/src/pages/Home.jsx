@@ -18,6 +18,7 @@ const Home = () => {
           <Link to="/signup"><button>Signup</button></Link>
         </div>
       </div>
+      
     </div>
   );
 };
