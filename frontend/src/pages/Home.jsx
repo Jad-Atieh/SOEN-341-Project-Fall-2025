@@ -1,52 +1,26 @@
 import React from "react";
-import "../styles/style.css"; // Adjust this path if your CSS is stored elsewhere
+import "../styles/style.css";
+import { Link } from "react-router-dom";
 
-const BrowseEvents = () => {
-    return (
-        <div>
-            <header>
-                <h1>Browse Events</h1>
-            </header>
+const Home = () => {
+  return (
+    <div className="home-container">
+      <header className="home-header">
+        <h1>Welcome to Campus Events!</h1>
+        <p>Sign in or sign up to discover upcoming events, workshops, and activities.</p>
+      </header>
 
-            <section className="events">
-                <div className="event-card">
-                    <h3>Hackathon 2025</h3>
-                    <p>
-                        <strong>Date:</strong> 2025-11-10
-                    </p>
-                    <p>
-                        <strong>Location:</strong> Concordia EV Building
-                    </p>
-                    <p>Collaborate and innovate in our annual student hackathon!</p>
-                    <button>Register</button>
-                </div>
-
-                <div className="event-card">
-                    <h3>Career Fair</h3>
-                    <p>
-                        <strong>Date:</strong> 2025-11-25
-                    </p>
-                    <p>
-                        <strong>Location:</strong> Hall Building
-                    </p>
-                    <p>Meet top recruiters and explore internship opportunities.</p>
-                    <button>Register</button>
-                </div>
-
-                <div className="event-card">
-                    <h3>Wellness Workshop</h3>
-                    <p>
-                        <strong>Date:</strong> 2025-12-03
-                    </p>
-                    <p>
-                        <strong>Location:</strong> Online
-                    </p>
-                    <p>Learn techniques to reduce stress and improve balance.</p>
-                    <button disabled>Sold Out</button>
-                </div>
-            </section>
+      <div className="home-card">
+        <h2>Get Started</h2>
+        <p>You need to be logged in to access events, dashboards, and account features.</p>
+        <div className="btn-container">
+          <Link to="/login"><button>Login</button></Link>
+          <Link to="/signup"><button>Signup</button></Link>
         </div>
-    );
+      </div>
+      
+    </div>
+  );
 };
 
-export default BrowseEvents;
+export default Home;
