@@ -1,5 +1,8 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 // Pages
 import Signup from "./pages/Signup";
@@ -21,8 +24,18 @@ function Logout() {
 function App() {
   return (
     <BrowserRouter>
+
+    <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            pauseOnHover
+          />
+      
       <nav>
-        <Link to="/">Home</Link>
+        <Link to="/"> Return Home</Link>
       </nav>
       <Routes>
         {/* Home page defaults to EventsList for logged-in users */}
