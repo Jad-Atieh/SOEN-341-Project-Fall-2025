@@ -81,12 +81,19 @@ class TicketSerializer(serializers.ModelSerializer):
     - User field is read-only (taken from authenticated user).
     """
 
-    user = serializers.StringRelatedField(read_only=True)
 
+    event_title = serializers.CharField(source='event.title', read_only=True)
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    is_valid = serializers.ReadOnlyField()
+    
     class Meta:
         model = Ticket
-        fields = '__all__'
-        read_only_fields = ['user', 'claimed_at']
+        fields = [
+            'id', 'event', 'event_title', 'user', 'user_name', 'user_email',
+            'qr_code', 'status', 'claimed_at', 'used_at', 'is_valid'
+        ]
+        read_only_fields = ('user', 'claimed_at', 'used_at', 'qr_code')
 
 # -------------------------------
 # USER SERIALIZER (For Admin Use)
