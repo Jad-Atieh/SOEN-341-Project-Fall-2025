@@ -32,18 +32,18 @@ function Navbar() {
   };
 
   return (
-    <nav className="nav-bar">
-      <Link to="/">Home</Link>
+    <nav className="navbar">
+      <Link to="/">Home</Link> {" "}
 
       {isLoggedIn ? (
         <>
-          <Link to="/events">Events</Link>
-          <button onClick={handleLogout} className="logout-btn">Sign Out</button>
+          <Link to="/events">Events</Link> {"  "}
+          <button onClick={handleLogout} className="button-style">Sign Out</button>
         </>
       ) : (
         <>
-          <Link to="/login">Login</Link>
-          <Link to="/signup">Signup</Link>
+          <Link to="/login">Login</Link> {"  "}
+          <Link to="/signup">Signup</Link> {"  "}
         </>
       )}
     </nav>
