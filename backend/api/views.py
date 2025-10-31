@@ -12,6 +12,7 @@ Each class below corresponds to a specific API endpoint and defines:
 
 from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions, status, exceptions
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -20,6 +21,7 @@ from .models import User, Event, Ticket
 from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer)
 from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin)
 from django.utils import timezone
+from django.db.models import Count, Q
 
 # Get custom user model
 User = get_user_model()

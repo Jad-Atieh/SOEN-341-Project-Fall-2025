@@ -19,6 +19,7 @@ from .views import (
     UserListView,
     ClaimTicketView,
     ApproveOrganizerView,
+    student_dashboard,
 )
 
 urlpatterns = [

@@ -149,6 +149,9 @@ class Event(models.Model):
     def __str__(self):
         """Readable representation of the event."""
         return f"{self.title} ({self.organization})"
+    
+    class Meta:
+        db_table = 'events'
 
 # ============================================================
 # TICKET MODEL
