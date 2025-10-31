@@ -58,11 +58,12 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/events" element={<ProtectedRoute><EventsList /></ProtectedRoute>} />
+        <Route path="/events" element={<ProtectedRoute roles={[ "student", "organizer", "admin" ]}><EventsList /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute roles={[ "admin"]}><AdminDashboard /></ProtectedRoute>} />
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
