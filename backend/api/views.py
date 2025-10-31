@@ -11,12 +11,13 @@ Each class below corresponds to a specific API endpoint and defines:
 """
 
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import generics, permissions, status, exceptions
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User, Event, Ticket
+from .models import User, Event, Ticket, AuditLog
 from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer)
 from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin)
 
@@ -29,33 +30,48 @@ User = get_user_model()
 class CreateUserView(generics.CreateAPIView):
     """
     Handles new user registration.
-    - All new users (students or organizers) are created with:
+
+    Behavior:
+    - All new users (students or organizers) are automatically created as:
         status='pending', is_active=False
-    - Admin must approve users to 'active' or 'suspended'.
+    - Admin must later approve the user to become 'active' or mark as 'suspended'.
+
+    Access:
+    - Public (Anyone can register)
     """
 
-    serializer_class = RegisterSerializer
-    permission_classes = [AllowAny] # Anyone can register (no login required)
+serializer_class = RegisterSerializer
+permission_classes = [AllowAny] # Anyone can register (no login required)
 
-    def create(self, request, *args, **kwargs):
-        """Custom response after successful registration."""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+def create(self, request, *args, **kwargs):
+    """Custom response after successful registration."""
+    serializer = self.get_serializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = serializer.save()
 
-        return Response({
-            "id": user.id,
-            "name": user.name,
-            "role": user.role,
-            "status": user.status,
-            "message": "Account created successfully. Awaiting admin approval."
-        }, status=status.HTTP_201_CREATED)
+    return Response({
+        "id": user.id,
+        "name": user.name,
+        "role": user.role,
+        "status": user.status,
+        "message": "Account created successfully. Awaiting admin approval."
+    }, status=status.HTTP_201_CREATED)
 
 # ------------------------------------
 # USER LOGIN (JWT)
 # ------------------------------------
 class LoginUserView(APIView):
-    """Handles JWT login."""
+    """
+    Handles JWT-based login for users.
+
+    Behavior:
+    - Authenticates user credentials (email & password)
+    - Returns JWT access + refresh tokens if valid
+    - Denies login for invalid credentials
+
+    Access:
+    - Public (Anyone can log in with valid credentials)
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -97,9 +113,15 @@ class LoginUserView(APIView):
 # ------------------------------------
 class EventListCreateView(generics.ListCreateAPIView):
     """
-    Handles listing and creating events.
-    - GET: Any logged-in user can view events.
-    - POST: Only organizers can create new events.
+    Manages all event listings and event creation.
+
+    Behavior:
+    - GET: Returns all events, with optional filters by date, category, or organization
+    - POST: Allows only organizers to create new events (auto-linked to their account)
+
+    Access:
+    - GET: Students, Organizers, and Admins
+    - POST: Organizers only
     """
 
     serializer_class = EventSerializer
@@ -135,9 +157,15 @@ class EventListCreateView(generics.ListCreateAPIView):
 # ------------------------------------
 class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
-    Handles individual event actions.
-    - GET: All authenticated users can view.
-    - PUT/PATCH/DELETE: Only organizers can modify or delete events.
+    Manages actions for individual events.
+
+    Behavior:
+    - GET: Any authenticated user can view event details
+    - PUT/PATCH/DELETE: Only organizers can edit or delete their events
+
+    Access:
+    - GET: Students/Organizers/Admins
+    - PUT/PATCH/DELETE: Organizers only
     """
 
     serializer_class = EventSerializer
@@ -157,9 +185,15 @@ class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
 # ------------------------------------
 class ClaimTicketView(generics.CreateAPIView):
     """
-    Allows students to claim tickets for events.
-    - Only students can claim.
-    - Prevents duplicates and over-capacity claims.
+    Allows students to claim tickets for specific events.
+
+    Rules:
+    - Only students can claim tickets.
+    - Event capacity is enforced.
+    - Prevents duplicate ticket claims per event.
+
+    Access:
+    - Students only.
     """
 
     serializer_class = TicketSerializer
@@ -189,31 +223,126 @@ class ClaimTicketView(generics.CreateAPIView):
         serializer.save(user=self.request.user, event=event)
 
 # ------------------------------------
-# ADMIN USER MANAGEMENT
+# ADMIN USER MANAGEMENT (LIST USERS)
 # ------------------------------------
 class UserListView(generics.ListAPIView):
     """
-    Allows admins to view all registered users.
+    Allows admins to view all registered users in the system.
+
+    Access:
+    - Admins only.
     """
 
     serializer_class = UserSerializer
     permission_classes = [IsAdmin]
     queryset = User.objects.all()
 
-
-class ApproveOrganizerView(generics.UpdateAPIView):
+# ------------------------------------
+# USERS MANAGEMENT (APPROVE / SUSPEND / RESET)
+# ------------------------------------
+class ManageUserStatusView(APIView):
     """
-    Allows admins to approve suspended organizer accounts.
-    - Only admins can approve.
+    Allows Admins to manage user account statuses.
+
+    Behavior:
+    - Approve (set to active)
+    - Suspend (set to suspended)
+    - Reset (set to pending)
+
+    Lookup Methods:
+    - By ID
+    - By Email
+    - By Name
+
+    Access:
+    - Admins only.
     """
 
     serializer_class = UserSerializer
     permission_classes = [IsAdmin]
+    queryset = User.objects.all()
 
-    def get_queryset(self):
-        """Only show organizers waiting for approval."""
-        return User.objects.filter(status='pending')
+    def patch(self, request, *args, **kwargs):
+        """Approve, suspend, or reset user status in one API call."""
+        user_id = request.data.get("id")
+        email = request.data.get("email")
+        name = request.data.get("name")
+        new_status = request.data.get("status")
 
-    def perform_update(self, serializer):
-        """Approve an organizer (activate their account)."""
-        serializer.save(status='active', is_active=True)
+        # Validate input
+        if not new_status or new_status not in ["active","suspended","pending"]:
+            return Response({"error":"Invalid status. Use active/suspended/pending."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Locate user
+        user = None
+        if user_id:
+            user = User.objects.filter(id=user_id).first()
+        elif email:
+            user = User.objects.filter(email__iexact=email.strip()).first()
+        elif name:
+            user = User.objects.filter(name__icontains=name.strip()).first()
+
+        if not user:
+            return Response({"error":"User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Update status and activation
+        user.status = new_status
+        user.is_active = (new_status == "active")
+        user.save()
+
+        return Response({
+            "message": f"User '{user.name}' status set to '{new_status}'.",
+            "user": UserSerializer(user).data
+        })
+
+# ------------------------------------
+# EVENTS MANAGEMENT
+# ------------------------------------
+class ManageEventStatusView(APIView):
+    """
+    Allows Admins to approve or reject events created by organizers.
+
+    Behavior:
+    - PATCH: Update event's approval status (approved/rejected)
+    - Logs approval/rejection in AuditLog table
+
+    Access:
+    - Admins only.
+    """
+
+    permission_classes = [IsAdmin]
+
+    def patch(self, request, event_id):
+        """Approve or reject an event by ID."""
+        new_status = request.data.get("status")
+
+        # Validate status input
+        if new_status not in ["approved", "rejected"]:
+            return Response({"error": "Invalid status. Choose 'approved' or 'rejected'."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Retrieve event
+        try:
+            event = Event.objects.get(id=event_id)
+        except Event.DoesNotExist:
+            return Response({"error": "Event not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Update approval state
+        event.approval_status = new_status
+        event.is_approved = (new_status == "approved")
+        event.approved_by = request.user
+        event.approved_at = timezone.now()
+        event.save()
+
+        # Log approval/rejection in audit trail
+        AuditLog.objects.create(
+            admin=request.user,
+            target_event=event,
+            action="approve_event" if new_status == "approved" else "reject_event",
+        )
+
+        return Response({
+            "message": f"Event '{event.title}' marked as {new_status}.",
+            "event": EventSerializer(event).data,
+        }, status=status.HTTP_200_OK)
