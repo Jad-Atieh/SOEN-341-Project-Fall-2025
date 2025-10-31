@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import Home from "./pages/Home";
 import StudentDashboard from "./pages/StudentDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
+import OrganizerApproval from "./pages/OraganizerApproval";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -76,6 +77,7 @@ function Navbar() {
       {isLoggedIn && role === "admin" && (
         <>
           <Link to="/admin">Admin Dashboard</Link> {"  "}
+          <Link to="/approval">Organizer Approval</Link> {"  "}
           <button onClick={handleLogout} className="button-style">Sign Out</button>
         </>
       )}
@@ -97,6 +99,9 @@ function App() {
 
         <Route path="/admin" element={
           <ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>
+        } />
+        <Route path="/approval" element={
+          <ProtectedRoute roles={["admin"]}><OrganizerApproval/></ProtectedRoute>
         } />
 
         <Route path="/student" element={
