@@ -47,6 +47,7 @@ function Navbar() {
   };
 
   return (
+    // navigation bar based on user role and login status
     <nav className="navbar">
       <Link to="/">Home</Link> {" "}
 
