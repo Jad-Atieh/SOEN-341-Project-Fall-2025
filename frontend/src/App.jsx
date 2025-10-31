@@ -10,6 +10,8 @@ import EventsList from "./pages/EventsList";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Home from "./pages/Home";
+import StudentDashboard from "./pages/StudentDashboard";
+import OrganizerDashboard from "./pages/OrganizerDashboard";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -38,6 +40,9 @@ function Navbar() {
       {isLoggedIn ? (
         <>
           <Link to="/events">Events</Link> {"  "}
+          <Link to="/student">Student Dashboard</Link> {"  "}
+          <Link to="/organizer">Organizer Dashboard</Link> {"  "}
+          <Link to="/admin">Admin Dashboard</Link> {"  "}
           <button onClick={handleLogout} className="button-style">Sign Out</button>
         </>
       ) : (
@@ -58,12 +63,16 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/events" element={<ProtectedRoute roles={[ "student", "organizer", "admin" ]}><EventsList /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/admin" element={<ProtectedRoute roles={[ "admin"]}><AdminDashboard /></ProtectedRoute>} />
         
+        <Route path="/student" element={<ProtectedRoute roles={["student"]}><StudentDashboard /></ProtectedRoute>} />
+        <Route path="/events" element={<ProtectedRoute roles={[ "student"]}><EventsList /></ProtectedRoute>} />
+
+        <Route path="/organizer" element={<ProtectedRoute roles={["organizer"]}><OrganizerDashboard /></ProtectedRoute>} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
