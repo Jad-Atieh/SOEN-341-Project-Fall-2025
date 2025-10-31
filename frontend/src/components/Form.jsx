@@ -33,7 +33,7 @@ function Form({ route, method }) {
       const data =
         method === "login"
           ? { email, password }
-          : { username, email, password, role };
+          : { name: username, email, password, role };
 
       const res = await api.post(route, data);
 
