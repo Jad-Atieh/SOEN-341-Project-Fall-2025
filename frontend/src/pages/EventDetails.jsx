@@ -9,7 +9,9 @@ export default function EventDetails() {
         <h1>Event Details</h1>
         <p>Event ID: {id}</p>
         <p>This is a placeholder. Connect this page to the backend later.</p>
-        <Link className="btn btn-link" to="/events">← Back to Events</Link>
+        <Link className="btn btn-link" to="/events">
+          ← Back to Events
+        </Link>
       </section>
     </main>
   );
