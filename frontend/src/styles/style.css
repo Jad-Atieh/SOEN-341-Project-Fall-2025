@@ -79,23 +79,6 @@
   color: #ff8c00;
 }
 
-/* Buttons */
-button {
-  margin-top: auto;
-  background-color: #004aad;
-  color: #fff;
-  border: none;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s ease-in-out;
-}
-
-button:hover {
-  background-color: #003580;
-  transform: scale(1.03);
-}
 
 button[disabled] {
   background-color: #ccc;
@@ -106,6 +89,22 @@ button[disabled] {
 /********************************       HOME PAGE         ************************************************/
 /*********************************************************************************************************/
 
+.home button:hover {
+  background-color: #003580;
+  transform: scale(1.03);
+}
+
+.home button {
+  margin-top: auto;
+  background-color: #004aad;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+}
 .home-container {
   min-height: 100vh;
   display: flex;
@@ -182,4 +181,38 @@ button[disabled] {
 .home-card button:hover {
   background-color: #003580;
   transform: scale(1.03);
+}
+
+
+/*********************************************************************************************************/
+/********************************       NAV BAR           ************************************************/
+/*********************************************************************************************************/
+
+
+.navbar {
+  display: flex;
+  gap: 1.5rem; /* Adds spacing between all items */
+}
+
+.navbar a,
+.button-style {
+  color: #000; /* Black text */
+  text-decoration: none; /* Remove underline by default */
+}
+
+.navbar a:hover,
+.button-style:hover {
+  color: #333; /* Slightly lighter black on hover */
+  text-decoration: underline; /* Add underline on hover */
+}
+
+.button-style {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 0;
+  display: inline;
 }
