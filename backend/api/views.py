@@ -40,22 +40,26 @@ class CreateUserView(generics.CreateAPIView):
     - Public (Anyone can register)
     """
 
-serializer_class = RegisterSerializer
-permission_classes = [AllowAny] # Anyone can register (no login required)
+    serializer_class = RegisterSerializer
+    permission_classes = [AllowAny] # Anyone can register (no login required)
 
-def create(self, request, *args, **kwargs):
-    """Custom response after successful registration."""
-    serializer = self.get_serializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    user = serializer.save()
+    def get(self, request, *args, **kwargs):
+        """Prevent DRF browser from crashing when visiting signup via GET."""
+        return Response({"message": "Use POST to register a new user."})
 
-    return Response({
-        "id": user.id,
-        "name": user.name,
-        "role": user.role,
-        "status": user.status,
-        "message": "Account created successfully. Awaiting admin approval."
-    }, status=status.HTTP_201_CREATED)
+    def create(self, request, *args, **kwargs):
+        """Custom response after successful registration."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        return Response({
+            "id": user.id,
+            "name": user.name,
+            "role": user.role,
+            "status": user.status,
+            "message": "Account created successfully. Awaiting admin approval."
+        }, status=status.HTTP_201_CREATED)
 
 # ------------------------------------
 # USER LOGIN (JWT)
@@ -120,25 +124,44 @@ class EventListCreateView(generics.ListCreateAPIView):
     - POST: Allows only organizers to create new events (auto-linked to their account)
 
     Access:
-    - GET: Students, Organizers, and Admins
+    - GET: Public (no login required) — shows only approved events
     - POST: Organizers only
     """
 
     serializer_class = EventSerializer
 
     def get_permissions(self):
-        """Dynamically assign permissions based on request type."""
+        """Allow public access for GET; restrict POST to organizers."""
         if self.request.method == 'POST':
             return [IsOrganizer()]  # Only organizers can create
-        return [IsStudentOrOrganizerOrAdmin()]  # All authenticated users can view
+        return [AllowAny()]  # Public can view events
 
     def perform_create(self, serializer):
         """Automatically assign the current user as the event organizer."""
-        serializer.save(organizer=self.request.user)
+        serializer.save(organizer=self.request.user, approval_status='pending')
 
     def get_queryset(self):
         """Supports filtering by date, category, or organization."""
         queryset = Event.objects.all()
+        user = self.request.user
+
+        # 1. Public (not logged in)
+        if not user.is_authenticated:
+            queryset = queryset.filter(approval_status='approved')
+
+        # 2. Students: see only approved events
+        elif user.role == 'student':
+            queryset = queryset.filter(approval_status='approved')
+
+        # 3. Organizers: see all their own events
+        elif user.role == 'organizer':
+            queryset = queryset.filter(organizer=user)
+
+        # 4. Admins: see all events
+        elif user.role == 'admin':
+            queryset = queryset.all()
+
+        # Filter options for convenience
         date = self.request.query_params.get('date')
         category = self.request.query_params.get('category')
         organization = self.request.query_params.get('organization')
@@ -160,11 +183,11 @@ class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
     Manages actions for individual events.
 
     Behavior:
-    - GET: Any authenticated user can view event details
+    - GET: Any user can view event details
     - PUT/PATCH/DELETE: Only organizers can edit or delete their events
 
     Access:
-    - GET: Students/Organizers/Admins
+    - GET: Public
     - PUT/PATCH/DELETE: Organizers only
     """
 
@@ -174,7 +197,7 @@ class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
         """Control access by role and request type."""
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
             return [IsOrganizer()]
-        return [IsStudentOrOrganizerOrAdmin()]
+        return [AllowAny()]
 
     def get_queryset(self):
         """Retrieve events."""
@@ -310,16 +333,19 @@ class ManageEventStatusView(APIView):
     Access:
     - Admins only.
     """
-
+    serializer_class = EventSerializer
     permission_classes = [IsAdmin]
 
-    def patch(self, request, event_id):
-        """Approve or reject an event by ID."""
-        new_status = request.data.get("status")
+    def get_queryset(self):
+        return Event.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        event = self.get_object()
+        new_status = request.data.get('status')
 
         # Validate status input
-        if new_status not in ["approved", "rejected"]:
-            return Response({"error": "Invalid status. Choose 'approved' or 'rejected'."},
+        if new_status not in ['approved', 'pending', 'rejected']:
+            return Response({"error": "Invalid status. Must be 'approved', 'pending', or 'rejected'."},
                             status=status.HTTP_400_BAD_REQUEST)
 
         # Retrieve event
@@ -343,6 +369,52 @@ class ManageEventStatusView(APIView):
         )
 
         return Response({
-            "message": f"Event '{event.title}' marked as {new_status}.",
-            "event": EventSerializer(event).data,
+            "id": event.id,
+            "title": event.title,
+            "status": event.status,
+            "message": f"Event successfully set to '{new_status}'."
+        }, status=status.HTTP_200_OK)
+
+# ------------------------------------
+# ORGANIZER EVENT UPDATE (NO STATUS CHANGE)
+# ------------------------------------
+class OrganizerUpdateEventView(generics.UpdateAPIView):
+    """
+    Allows organizers to update their own event details,
+    but they cannot modify the event's status.
+
+    Access:
+    - Organizer only.
+    """
+
+    serializer_class = EventSerializer
+    permission_classes = [IsOrganizer]
+
+    def get_queryset(self):
+        """
+        Restrict organizers to only their own events.
+        Admins cannot use this endpoint.
+        """
+        return Event.objects.filter(organizer=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Remove 'status' from incoming data so it cannot be changed.
+        """
+        data = request.data.copy()
+        data.pop('status', None)  # Prevent organizers from changing status
+
+        # Retrieve event (must belong to the organizer)
+        event = self.get_object()
+
+        # Perform partial update (PATCH)
+        serializer = self.get_serializer(event, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "id": event.id,
+            "title": event.title,
+            "updated_fields": list(data.keys()),
+            "message": "Event updated successfully (status unchanged)."
         }, status=status.HTTP_200_OK)
