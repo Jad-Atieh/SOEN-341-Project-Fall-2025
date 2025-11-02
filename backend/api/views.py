@@ -16,12 +16,10 @@ from rest_framework import generics, permissions, status, exceptions
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .models import User, Event, Ticket
-from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer)
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Event, Ticket, AuditLog
-from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer)
+from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer)
 from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin)
 
 # Get custom user model
@@ -415,18 +413,15 @@ class OrganizerUpdateEventView(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-    def perform_update(self, serializer):
-        """Approve an organizer (activate their account)."""
-        serializer.save(status='active', is_active=True)
-
-# ------------------------------------
-# JWT TOKEN VIEW CUSTOMIZATION
-# ------------------------------------
-class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
         return Response({
             "id": event.id,
             "title": event.title,
             "updated_fields": list(data.keys()),
             "message": "Event updated successfully (status unchanged)."
         }, status=status.HTTP_200_OK)
+    
+# ------------------------------------
+# JWT TOKEN VIEW CUSTOMIZATION
+# ------------------------------------
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer

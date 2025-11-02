@@ -26,8 +26,7 @@ from .views import (
     EventDetailView,
     UserListView,
     ClaimTicketView,
-    ApproveOrganizerView,
-    MyTokenObtainPairView
+    MyTokenObtainPairView,
     ManageUserStatusView,
     ManageEventStatusView,
     OrganizerUpdateEventView,
