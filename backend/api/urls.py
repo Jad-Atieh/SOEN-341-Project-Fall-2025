@@ -17,7 +17,7 @@ Structure:
 """
 
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 from .views import (
     CreateUserView,
@@ -26,6 +26,7 @@ from .views import (
     EventDetailView,
     UserListView,
     ClaimTicketView,
+    MyTokenObtainPairView,
     ManageUserStatusView,
     ManageEventStatusView,
     OrganizerUpdateEventView,
@@ -98,7 +99,7 @@ urlpatterns = [
     # -------------------------------
     # JWT AUTHENTICATION (LOGIN & TOKEN REFRESH)
     # -------------------------------
-    path("token/",TokenObtainPairView.as_view(),name="get_token"),
+    path("token/",MyTokenObtainPairView.as_view(),name="get_token"),
     # Endpoint: POST /api/token/
     # → Authenticates user and returns access + refresh JWT tokens.
 

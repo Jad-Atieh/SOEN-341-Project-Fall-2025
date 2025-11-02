@@ -16,9 +16,10 @@ from rest_framework import generics, permissions, status, exceptions
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Event, Ticket, AuditLog
-from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer)
+from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer)
 from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin)
 
 # Get custom user model
@@ -418,3 +419,9 @@ class OrganizerUpdateEventView(generics.UpdateAPIView):
             "updated_fields": list(data.keys()),
             "message": "Event updated successfully (status unchanged)."
         }, status=status.HTTP_200_OK)
+    
+# ------------------------------------
+# JWT TOKEN VIEW CUSTOMIZATION
+# ------------------------------------
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
