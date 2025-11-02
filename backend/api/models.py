@@ -6,6 +6,13 @@ Define the structure of your database tables for the project.
 
 - Each class represents a table in the MySQL database.
 - Each attribute (field) in the class represents a column in that table.
+
+Structure:
+- CustomUserManager: Handles user creation logic.
+- User: Core authentication model with roles and statuses.
+- Event: Represents events created by organizers (requires admin approval).
+- AuditLog: Tracks admin approval/suspension actions.
+- Ticket: Manages student event ticket claims.
 """
 
 from django.db import models
@@ -96,6 +103,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         - Suspended users are automatically deactivated.
         """
         if self.status == 'active':
+            # Active users only if approved
             self.is_active = True
         elif self.status in ['pending', 'suspended']:
             self.is_active = False
@@ -127,6 +135,12 @@ class Event(models.Model):
         ('paid', 'Paid'),
     )
 
+    APPROVAL_CHOICES = (
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    )
+
     # Event information
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -146,9 +160,59 @@ class Event(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_discovered = models.BooleanField(default=False)  # Whether visible on discovery page
 
+    # Admin approval system
+    is_approved = models.BooleanField(default=False)
+    approval_status = models.CharField(max_length=20, choices=APPROVAL_CHOICES, default="pending")
+
+    # Audit metadata
+    approved_by = models.ForeignKey(
+        "User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="approved_events",
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         """Readable representation of the event."""
-        return f"{self.title} ({self.organization})"
+        return f"{self.title} ({self.approval_status})"
+
+# ============================================================
+# AUDIT MODEL
+# ============================================================
+class AuditLog(models.Model):
+    """
+    Tracks all admin moderation actions (approvals/rejections).
+
+    Use Cases:
+    - When an admin approves or rejects an event.
+    - When an admin approves/suspends a user.
+    - When an admin resets a user’s status to pending.
+    """
+
+    ACTION_CHOICES = (
+        ("approve_event", "Approve Event"),
+        ("reject_event", "Reject Event"),
+        ("approve_user", "Approve User"),
+        ("suspend_user", "Suspend User"),
+        ("pending_user", "Set User Pending"),
+    )
+
+    # References
+    admin = models.ForeignKey("User", on_delete=models.CASCADE, related_name="admin_actions")
+    target_user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="actions_on_user")
+    target_event = models.ForeignKey("Event", on_delete=models.SET_NULL, null=True, blank=True, related_name="actions_on_event")
+
+    # Action metadata
+    action = models.CharField(max_length=50, choices=ACTION_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        """Readable log entry showing admin and action."""
+        return f"{self.admin.name} performed {self.action} on {self.timestamp}"
+
 
 # ============================================================
 # TICKET MODEL

@@ -66,10 +66,11 @@ class EventSerializer(serializers.ModelSerializer):
     """
 
     organizer = serializers.StringRelatedField(read_only=True)  # Show organizer name instead of ID
+    approved_by = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Event
         fields = '__all__'
-        read_only_fields = ['organizer', 'created_at']
+        read_only_fields = ['organizer', 'created_at', "approved_by", "approved_at"]
 
 # -------------------------------
 # TICKET SERIALIZER
