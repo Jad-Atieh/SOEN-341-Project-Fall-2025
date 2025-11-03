@@ -1,41 +1,56 @@
-import React from "react";
-import "../styles/style.css"; 
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { api } from "../api";
 
-const EventsList = () => {
+export default function EventsList() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const data = await api("/events/");
+        if (alive) setEvents(Array.isArray(data) ? data : (data.results || []));
+      } catch (e) {
+        setErr(e?.message || "Failed to load events");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  if (loading) return <main className="page-container"><p>Loading…</p></main>;
+  if (err) {
+    // ne pas crasher l'app : on affiche l’erreur ET une UI vide
     return (
-        <div className="events-container">
-            <header className="events-header">
-                <h1>Browse Events</h1>
-            </header>
-
-            <section className="events">
-                <div className="event-card">
-                    <h3>Hackathon 2025</h3>
-                    <p><strong>Date:</strong> 2025-11-10</p>
-                    <p><strong>Location:</strong> Concordia EV Building</p>
-                    <p>Collaborate and innovate in our annual student hackathon!</p>
-                    <button>Register</button>
-                </div>
-
-                <div className="event-card">
-                    <h3>Career Fair</h3>
-                    <p><strong>Date:</strong> 2025-11-25</p>
-                    <p><strong>Location:</strong> Hall Building</p>
-                    <p>Meet top recruiters and explore internship opportunities.</p>
-                    <button>Register</button>
-                </div>
-
-                <div className="event-card">
-                    <h3>Wellness Workshop</h3>
-                    <p><strong>Date:</strong> 2025-12-03</p>
-                    <p><strong>Location:</strong> Online</p>
-                    <p>Learn techniques to reduce stress and improve balance.</p>
-                    <button disabled>Sold Out</button>
-                </div>
-            </section>
-        </div>
+      <main className="page-container">
+        <h1>Events</h1>
+        <p style={{ color: "crimson" }}>{err}</p>
+        {events.length === 0 && <p>No events yet.</p>}
+      </main>
     );
-};
+  }
 
-export default EventsList;
+  return (
+    <main className="page-container">
+      <h1>Events</h1>
+      {events.length === 0 ? (
+        <p>No events yet.</p>
+      ) : (
+        <ul style={{ display: "grid", gap: 12, padding: 0, listStyle: "none" }}>
+          {events.map((e) => (
+            <li key={e.id}>
+              <Link to={`/events/${e.id}`} style={{ fontWeight: 600 }}>
+                {e.title || e.name || `Event #${e.id}`}
+              </Link>
+              {e.start_time && <div>{new Date(e.start_time).toLocaleString()}</div>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </main>
+  );
+}

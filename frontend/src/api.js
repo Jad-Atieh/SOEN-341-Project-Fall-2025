@@ -1,23 +1,10 @@
-import axios from "axios";
-import { ACCESS_TOKEN } from "./constants";
+export const API_BASE = "http://127.0.0.1:8000/api";
 
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL // base url taken from the env
-});
-
-//to be used before every request. Follows the api.interceptors.request(SUCCESS, ERROR) format
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem(ACCESS_TOKEN); 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-export default api;
+export async function api(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    ...options,
+  });
+  if (!res.ok) throw new Error("API request failed");
+  return res.json();
+}
