@@ -503,11 +503,12 @@ class CheckInTicketView(APIView):
             return Response({"error": "Invalid QR code."}, status=status.HTTP_404_NOT_FOUND)
 
         # Only event organizer or admin can check in
-        if request.user != ticket.event.organizer and request.user.role != "admin":
+        if request.user != ticket.event.organizer:
             return Response(
                 {"error": "You are not authorized to check in attendees for this event."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+
 
         if ticket.status == "used":
             return Response({"message": "This ticket has already been used."}, status=status.HTTP_200_OK)
@@ -538,7 +539,7 @@ class ExportTicketsCSVView(APIView):
         response['Content-Disposition'] = f'attachment; filename="event_{event_id}_tickets.csv"'
 
         writer = csv.writer(response)
-        writer.writerow(['User', 'Event', 'Status', 'Claimed At', 'Used At'])
+        writer.writerow(['Student', 'Event', 'Status', 'Claimed At', 'Used At'])
         for t in tickets:
             writer.writerow([
                 t.user.username,
