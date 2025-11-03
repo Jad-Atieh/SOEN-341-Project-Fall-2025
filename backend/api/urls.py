@@ -4,12 +4,20 @@ urls.py
 Purpose:
 Defines all API endpoints (routes) for the backend.
 
-Each path() maps a specific URL to a corresponding view,
-which handles the logic for that request (GET, POST, PUT, DELETE, etc.).
+Each path() maps a specific URL to its corresponding view class,
+which handles the HTTP logic (GET, POST, PATCH, DELETE, etc.)
+based on the user’s role and permissions.
+
+Structure:
+- User Authentication & Registration
+- Admin User Management
+- Event Management
+- Ticket Management
+- JWT Authentication (Token & Refresh)
 """
 
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 from .views import (
     CreateUserView,
@@ -18,7 +26,10 @@ from .views import (
     EventDetailView,
     UserListView,
     ClaimTicketView,
-    ApproveOrganizerView,
+    MyTokenObtainPairView,
+    ManageUserStatusView,
+    ManageEventStatusView,
+    OrganizerUpdateEventView,
     student_dashboard,
 )
 
@@ -42,10 +53,14 @@ urlpatterns = [
     # Endpoint: GET /api/users/
     # → Admin can view all users.
 
-    path("users/approve/<int:pk>/",ApproveOrganizerView.as_view(),name="approve-organizer"),
+    path("users/manage/", ManageUserStatusView.as_view(), name="manage-user-status"),
     # Endpoint: PATCH /api/users/approve/<id>/
     # → Admin can approve a pending organizer account.
-
+    # Example:
+    # {
+    #   "email": "jane@example.com",
+    #   "status": "active"
+    # }
 
     # -------------------------------
     # EVENT MANAGEMENT
@@ -61,6 +76,19 @@ urlpatterns = [
     # - PUT/PATCH /api/events/<id>/ → Update event (organizers only)
     # - DELETE /api/events/<id>/ → Delete event (organizers/admins)
 
+    path("events/organizer/<int:pk>/", OrganizerUpdateEventView.as_view(), name="organizer-event-update"),
+    # Endpoint:
+    # - PATCH /api/events/organizer/<id>/
+    # → Organizer-only endpoint to update their own events
+    # → Cannot modify event status (admin handles approval)
+
+    path("events/manage/<int:event_id>/", ManageEventStatusView.as_view(), name="approve-event"),
+    # Endpoint:
+    # - PATCH /api/events/manage/<event_id>/
+    # Example:
+    # {
+    #   "status": "approved"
+    # }
 
     # -------------------------------
     # TICKET MANAGEMENT
@@ -70,18 +98,18 @@ urlpatterns = [
     # → Allows students to claim tickets for an event.
 
     # -------------------------------
-    # DASHBOARD
-    # -------------------------------
-    path('dashboard/student/', student_dashboard, name='student-dashboard'),
-
-    # -------------------------------
     # JWT AUTHENTICATION (LOGIN & TOKEN REFRESH)
     # -------------------------------
-    path("token/",TokenObtainPairView.as_view(),name="get_token"),
+    path("token/",MyTokenObtainPairView.as_view(),name="get_token"),
     # Endpoint: POST /api/token/
     # → Authenticates user and returns access + refresh JWT tokens.
 
     path("token/refresh/",TokenRefreshView.as_view(),name="refresh"),
     # Endpoint: POST /api/token/refresh/
     # → Refreshes the JWT access token when it expires.
+
+    # -------------------------------
+    # DASHBOARD
+    # -------------------------------
+    path('dashboard/student/', student_dashboard, name='student-dashboard'),
 ]

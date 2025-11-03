@@ -11,6 +11,7 @@ They serve two main purposes:
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import User, Event, Ticket
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 # Get the custom User model
 User = get_user_model()
@@ -66,10 +67,11 @@ class EventSerializer(serializers.ModelSerializer):
     """
 
     organizer = serializers.StringRelatedField(read_only=True)  # Show organizer name instead of ID
+    approved_by = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Event
         fields = '__all__'
-        read_only_fields = ['organizer', 'created_at']
+        read_only_fields = ['organizer', 'created_at', "approved_by", "approved_at"]
 
 # -------------------------------
 # TICKET SERIALIZER
@@ -108,3 +110,18 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'name', 'email', 'role', 'status', 'is_active']
         read_only_fields = ['is_active']
+
+
+# -------------------------------
+# TOKEN SERIALIZER WITH EXTRA CLAIMS (role and name)
+# -------------------------------
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add extra claims
+        token['role'] = user.role
+        token['name'] = user.name
+
+        return token

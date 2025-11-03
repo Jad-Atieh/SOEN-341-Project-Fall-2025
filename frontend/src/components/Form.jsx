@@ -33,17 +33,34 @@ function Form({ route, method }) {
       const data =
         method === "login"
           ? { email, password }
-          : { username, email, password, role };
+          : { name: username, email, password, role };
 
       const res = await api.post(route, data);
 
       if (method === "login") {
+        // Save tokens
         localStorage.setItem(ACCESS_TOKEN, res.data.access);
         localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
-        navigate("/"); 
+
+        // Decode JWT to get role
+        const payload = JSON.parse(atob(res.data.access.split(".")[1]));
+        const userRole = payload.role;
+
+        // Redirect based on role
+        if (userRole === "student") {
+          navigate("/student");
+        } else if (userRole === "organizer") {
+          navigate("/organizer");
+        } else if (userRole === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+
       } else {
         navigate("/login"); 
       }
+
     } catch (error) {
       alert(error);
     } finally {
@@ -95,7 +112,7 @@ function Form({ route, method }) {
         </select>
       )}
 
-       {loading && <LoadingIndicator />}
+      {loading && <LoadingIndicator />}
 
       <button type="submit" className="form-button">
         {name}
