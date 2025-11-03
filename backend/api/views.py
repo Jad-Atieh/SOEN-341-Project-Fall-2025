@@ -13,7 +13,7 @@ Each class below corresponds to a specific API endpoint and defines:
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import generics, permissions, status, exceptions
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -21,6 +21,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Event, Ticket, AuditLog
 from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer)
 from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin)
+from django.db.models import Count, Q
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.http import HttpResponse
+import csv
+
 
 # Get custom user model
 User = get_user_model()
@@ -425,3 +431,120 @@ class OrganizerUpdateEventView(generics.UpdateAPIView):
 # ------------------------------------
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+    # ------------------------------------
+# EVENT ANALYTICS 
+# ------------------------------------
+class EventAnalyticsView(APIView):
+    """
+    Returns analytics for a specific event.
+
+    Accessible by:
+      - The event organizer
+      - Admin users
+
+    Returns:
+      - total_tickets: number of claimed tickets
+      - checked_in_attendees: number of attendees checked in
+      - capacity: max allowed attendees
+    """
+    permission_classes = [IsAuthenticated, IsStudentOrOrganizerOrAdmin]
+
+    def get(self, request, event_id):
+        event = get_object_or_404(Event, id=event_id)
+
+        # Organizer or admin can view
+        if not (request.user == event.organizer or request.user.role == "admin"):
+            return Response(
+                {"error": "You are not authorized to view this event's analytics."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        analytics = (
+            Event.objects.filter(id=event_id)
+            .annotate(
+                total_tickets=Count("tickets"),
+                checked_in_attendees=Count("tickets", filter=Q(tickets__status="used")),
+            )
+            .values("id", "title", "capacity", "total_tickets", "checked_in_attendees")
+            .first()
+        )
+
+        if not analytics:
+            analytics = {
+                "id": event.id,
+                "title": event.title,
+                "capacity": event.capacity,
+                "total_tickets": 0,
+                "checked_in_attendees": 0,
+            }
+
+        return Response(analytics, status=status.HTTP_200_OK)
+
+# ------------------------------------
+# Check in Ticket View 
+# ------------------------------------
+class CheckInTicketView(APIView):
+    """
+    Allows an organizer or admin to check in an attendee using the QR code.
+    Marks the ticket as 'used' and records the check-in time.
+    """
+    permission_classes = [IsAuthenticated, IsOrganizer | IsAdmin]
+
+    def post(self, request):
+        qr_code = request.data.get("qr_code")
+
+        if not qr_code:
+            return Response({"error": "QR code is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            ticket = Ticket.objects.get(qr_code=qr_code)
+        except Ticket.DoesNotExist:
+            return Response({"error": "Invalid QR code."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Only event organizer or admin can check in
+        if request.user != ticket.event.organizer and request.user.role != "admin":
+            return Response(
+                {"error": "You are not authorized to check in attendees for this event."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if ticket.status == "used":
+            return Response({"message": "This ticket has already been used."}, status=status.HTTP_200_OK)
+
+        ticket.status = "used"
+        ticket.used_at = timezone.now()
+        ticket.save()
+
+        return Response(
+            {
+                "message": "Ticket successfully checked in.",
+                "user": ticket.user.name,
+                "event": ticket.event.title,
+                "checked_in_at": ticket.used_at,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+# ------------------------------------
+# Export Tickets as CSV
+# ------------------------------------
+class ExportTicketsCSVView(APIView):
+    permission_classes = [IsAdminUser]  # only admin/staff
+
+    def get(self, request, event_id):
+        tickets = Ticket.objects.filter(event_id=event_id).select_related('user', 'event')
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="event_{event_id}_tickets.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['User', 'Event', 'Status', 'Claimed At', 'Used At'])
+        for t in tickets:
+            writer.writerow([
+                t.user.username,
+                t.event.title,
+                t.status,
+                t.claimed_at,
+                t.used_at or ''
+            ])
+        return response
