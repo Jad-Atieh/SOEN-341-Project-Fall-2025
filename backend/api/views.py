@@ -453,7 +453,7 @@ class EventAnalyticsView(APIView):
     def get(self, request, event_id):
         event = get_object_or_404(Event, id=event_id)
 
-        # Organizer or admin can view
+        # Organizer can view
         if not (request.user == event.organizer or request.user.role == "admin"):
             return Response(
                 {"error": "You are not authorized to view this event's analytics."},
