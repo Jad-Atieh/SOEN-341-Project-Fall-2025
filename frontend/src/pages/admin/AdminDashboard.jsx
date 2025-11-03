@@ -1,12 +1,29 @@
-import React from "react";
-import "../styles/style.css";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import OrganizerApproval from "./OrganizerApproval";
+import EventModeration from "./EventModeration";
+import GlobalAnalytics from "./GlobalAnalytics";
+import "../../styles/style.css"; // keep this if your CSS file exists
 
 const AdminDashboard = () => {
-    return (
-        <div>AdminDashboard
-        <Link to="/approval"><button>Approval</button></Link>
-        </div>
-    );
+  const [activeTab, setActiveTab] = useState("organizers");
+
+  return (
+    <div className="admin-dashboard">
+      <h1>Admin Dashboard</h1>
+
+      <div className="tab-buttons">
+        <button onClick={() => setActiveTab("organizers")}>Organizer Approval</button>
+        <button onClick={() => setActiveTab("events")}>Event Moderation</button>
+        <button onClick={() => setActiveTab("analytics")}>Global Analytics</button>
+      </div>
+
+      <div className="tab-content">
+        {activeTab === "organizers" && <OrganizerApproval />}
+        {activeTab === "events" && <EventModeration />}
+        {activeTab === "analytics" && <GlobalAnalytics />}
+      </div>
+    </div>
+  );
 };
-export default AdminDashboard
+
+export default AdminDashboard;
