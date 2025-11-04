@@ -1,22 +1,36 @@
-import React, { useEffect, useState } from "react";
-import { adminApi } from "../../api/adminApi";
+import React, { useState } from "react";
+
 
 export default function GlobalAnalytics() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    adminApi.getGlobalAnalytics().then(setData);
-  }, []);
-
-  if (!data) return <p>Loading analytics...</p>;
-
   return (
-    <div>
-      <h2>Global Analytics</h2>
-      <p>Total Users: {data.totalUsers}</p>
-      <p>Total Events: {data.totalEvents}</p>
-      <p>Tickets Issued: {data.ticketsIssued}</p>
-      <p>Revenue: ${data.revenue}</p>
+    <div className="analytics">
+      <div className="stats-grid">
+        <div className="stat-card">
+          <p>Total Users</p>
+          <h2>18,240</h2>
+        </div>
+        <div className="stat-card">
+          <p>Total Events</p>
+          <h2>742</h2>
+        </div>
+        <div className="stat-card">
+          <p>Tickets Issued</p>
+          <h2>412,300</h2>
+        </div>
+        <div className="stat-card">
+          <p>Revenue</p>
+          <h2>$3,820,000</h2>
+        </div>
+      </div>
+
+      {/* <div className="chart-card">
+        <h4>📈 Tickets, Users & Events by Month</h4>
+        <img
+          src="/chart-placeholder.png"
+          alt="Analytics Chart"
+          className="chart-img"
+        />
+      </div> */}
     </div>
   );
 }

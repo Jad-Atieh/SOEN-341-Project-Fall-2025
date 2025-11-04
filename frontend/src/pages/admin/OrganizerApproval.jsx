@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { adminApi } from "../../api/adminApi";
+import { adminApi } from "./adminApi"
 
 function OrganizerApproval() {
   const [loading, setLoading] = useState(true);
