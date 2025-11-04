@@ -7,12 +7,12 @@ import "react-toastify/dist/ReactToastify.css";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import EventsList from "./pages/EventsList";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Home from "./pages/Home";
 import StudentDashboard from "./pages/StudentDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
-import OrganizerApproval from "./pages/OraganizerApproval";
+import OrganizerApproval from "./pages/admin/OrganizerApproval";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -77,7 +77,7 @@ function Navbar() {
       {isLoggedIn && role === "admin" && (
         <>
           <Link to="/admin">Admin Dashboard</Link> {"  "}
-          <Link to="/approval">Organizer Approval</Link> {"  "}
+          {/* <Link to="/approval">Organizer Approval</Link> {"  "} */}
           <button onClick={handleLogout} className="button-style">Sign Out</button>
         </>
       )}
