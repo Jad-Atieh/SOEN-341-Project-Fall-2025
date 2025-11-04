@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import CreateEvent from "./pages/CreateEvent";
 
 // Pages
 import Signup from "./pages/Signup";
@@ -96,6 +97,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/logout" element={<Logout />} />
+        <Route path="/create-event" element={<CreateEvent />} />
 
         <Route path="/admin" element={
           <ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>

@@ -1,0 +1,9 @@
+.ce{min-height:calc(100vh - 80px);display:flex;justify-content:center;padding:64px 16px;background:linear-gradient(180deg,#f6f8ff 0%,#f7fbff 100%)}
+.ce-card{background:#fff;max-width:640px;width:100%;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.08);padding:24px 28px}
+.ce-title{margin:0 0 16px;font-size:28px;font-weight:700;text-align:center;color:#1d4ed8}
+.ce-form{display:flex;flex-direction:column;gap:12px}
+.ce-row{display:flex;gap:12px}
+.ce-form input,.ce-form textarea{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;font-size:14px}
+.ce-form textarea{height:96px;resize:vertical}
+.ce-btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-weight:600;cursor:pointer}
+.ce-btn:disabled{opacity:.6;cursor:default}
