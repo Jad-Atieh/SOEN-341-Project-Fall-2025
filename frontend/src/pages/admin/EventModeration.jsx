@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { adminApi } from "../../api/adminApi";
+import { adminApi } from "./adminApi"
 
 export default function EventModeration() {
   const [loading, setLoading] = useState(true);
