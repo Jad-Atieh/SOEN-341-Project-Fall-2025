@@ -1,27 +1,55 @@
 import React, { useState } from "react";
-import OrganizerApproval from "./OrganizerApproval";
-import EventModeration from "./EventModeration";
+import DashboardHeader from "./DashboardHeader";
+import Tabs from "./Tabs";
+import SearchBar from "./SearchBar";
+import EventsGrid from "./EventsGrid";
+import OrganizerTable from "./OrganizerTable";
 import GlobalAnalytics from "./GlobalAnalytics";
-import "../../styles/style.css"; // keep this if your CSS file exists
+
+import "./dashboard.css";
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState("organizers");
+  const tabs = ["Organizer Approval", "Event Moderation", "Global Analytics"];
+  const [active, setActive] = useState("Organizer Approval");
+  const [search, setSearch] = useState("");
 
   return (
-    <div className="admin-dashboard">
-      <h1>Admin Dashboard</h1>
+    <div className="admin-wrapper">
+      <DashboardHeader />
 
-      <div className="tab-buttons">
-        <button onClick={() => setActiveTab("organizers")}>Organizer Approval</button>
-        <button onClick={() => setActiveTab("events")}>Event Moderation</button>
-        <button onClick={() => setActiveTab("analytics")}>Global Analytics</button>
-      </div>
+      <Tabs tabs={tabs} active={active} onChange={setActive} />
 
-      <div className="tab-content">
-        {activeTab === "organizers" && <OrganizerApproval />}
-        {activeTab === "events" && <EventModeration />}
-        {activeTab === "analytics" && <GlobalAnalytics />}
-      </div>
+      {/* Organizer Approval */}
+      {active === "Organizer Approval" && (
+        <div className="content-block">
+          <h2 className="section-title">
+            👤 Pending organizer applications
+          </h2>
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search name, email, organization..."
+          />
+          <OrganizerTable search={search} />
+        </div>
+      )}
+
+      {/* Event Moderation */}
+      {active === "Event Moderation" && (
+        <div className="content-block">
+          <h2 className="section-title">📅 Pending events</h2>
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search title, organizer, location..."
+          />
+          <EventsGrid search={search} />
+        </div>
+      )}
+
+      {active === "Global Analytics" && (
+        <GlobalAnalytics />
+      )}
     </div>
   );
 };
