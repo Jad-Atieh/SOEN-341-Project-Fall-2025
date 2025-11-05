@@ -1,54 +1,101 @@
-import { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import "./events.css";
+
+function readEvents() {
+  try {
+    const raw = localStorage.getItem("draftEvents") || "[]";
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function pct(a, b) {
+  if (!b || b <= 0) return 0;
+  return Math.min(100, Math.round((a / b) * 100));
+}
 
 export default function EventsList() {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState("");
+  const all = useMemo(() => readEvents(), []);
+  const categories = useMemo(() => {
+    const set = new Set(all.map(e => e.form?.category || e.category || "General"));
+    return ["All", ...Array.from(set)];
+  }, [all]);
+  const [active, setActive] = useState("All");
 
-  useEffect(() => {
-    const base = import.meta.env.VITE_API_BASE || "http://localhost:8000";
-    fetch(`${base}/api/events/`)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(data => setEvents(Array.isArray(data) ? data : data.results || []))
-      .catch(e => setErr(String(e)))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div className="p-6">Loading…</div>;
-  if (err) return <div className="p-6 text-red-600">Error: {err}</div>;
-  if (!events.length) return <div className="p-6">No events.</div>;
+  const events = useMemo(() => {
+    const list = all.map(e => {
+      const title = e.form?.title || e.title || "Untitled";
+      const date = e.form?.date || e.date || "";
+      const time = e.form?.time || e.time || "";
+      const location = e.form?.location || e.location || "";
+      const category = e.form?.category || e.category || "General";
+      const description = e.form?.description || e.description || "";
+      const capacity = Number(e.capacity || 0);
+      const taken = Number(e.taken || 0);
+      const remain = Math.max(0, capacity - taken);
+      const percentage = pct(taken, capacity);
+      const soldOut = capacity > 0 && taken >= capacity;
+      const nearly = !soldOut && capacity > 0 && percentage >= 85;
+      return { id: e.id || title, title, date, time, location, category, description, capacity, taken, remain, percentage, soldOut, nearly };
+    });
+    return active === "All" ? list : list.filter(e => e.category === active);
+  }, [all, active]);
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Events</h1>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {events.map(ev => {
-          const capacity = Number(ev.capacity || ev.max_capacity || 0);
-          const sold = Number(ev.tickets_sold || ev.sold || 0);
-          const remaining = Math.max(capacity - sold, 0);
-          const percent = capacity > 0 ? sold / capacity : 0;
-          const soldOut = capacity > 0 && remaining === 0;
-          const showRemaining = !soldOut && percent >= 0.85 && remaining > 0;
+    <div className="events-wrap">
+      <header className="events-header">
+        <h1>Browse Events</h1>
+        <div className="events-cats">
+          {categories.map(c => (
+            <button
+              key={c}
+              className={c === active ? "cat-btn active" : "cat-btn"}
+              onClick={() => setActive(c)}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      </header>
 
-          return (
-            <div key={ev.id || ev.slug || ev.uuid || ev.title} className="border rounded-lg p-4">
-              <h2 className="text-lg font-medium">{ev.title || ev.name}</h2>
-              <p className="text-sm opacity-80">{ev.date || ev.start_time || ev.starts_at || ""}</p>
-              <p className="text-sm">{ev.location || ev.venue || ""}</p>
-              {soldOut && <p className="mt-2 text-red-600 font-semibold">Sold out</p>}
-              {showRemaining && <p className="mt-2 text-orange-600 font-medium">{remaining} seats left</p>}
-              <div className="mt-3 flex gap-2">
-                <Link to={`/event/${ev.id || ev.slug || ev.uuid || ""}`} className="px-3 py-1 border rounded">
-                  Details
-                </Link>
+      <div className="events-grid">
+        {events.length === 0 && <div className="empty">No events found.</div>}
+        {events.map(e => (
+          <div key={e.id} className="event-card">
+            <div className="event-top">
+              <h3 className="event-title">{e.title}</h3>
+              <div className="badges">
+                {e.soldOut && <span className="badge">Sold out</span>}
+                {e.nearly && <span className="badge">{e.remain} seats left</span>}
               </div>
             </div>
-          );
-        })}
+
+            <div className="event-meta">
+              <div><strong>Date:</strong> {e.date} {e.time}</div>
+              <div><strong>Location:</strong> {e.location}</div>
+              <div><strong>Category:</strong> {e.category}</div>
+            </div>
+
+            {e.description && <p className="event-desc">{e.description}</p>}
+
+            {e.capacity > 0 && (
+              <div className="meter">
+                <div className="meter-label">Sold {e.taken}/{e.capacity} ({e.percentage}%)</div>
+                <div className="meter-bar">
+                  <div className="meter-fill" style={{ width: `${e.percentage}%` }} />
+                </div>
+              </div>
+            )}
+
+            <div className="card-actions">
+              <Link to={`/event/${encodeURIComponent(e.id)}`}><button>Details</button></Link>
+              <Link to={`/create-event?id=${encodeURIComponent(e.id)}`}><button>Edit</button></Link>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
