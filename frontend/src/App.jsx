@@ -10,6 +10,9 @@ import EventsList from "./pages/EventsList";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Home from "./pages/Home";
+import StudentDashboard from "./pages/StudentDashboard";
+import OrganizerDashboard from "./pages/OrganizerDashboard";
+import OrganizerApproval from "./pages/OraganizerApproval";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -23,8 +26,21 @@ function Logout() {
 
 function Navbar() {
   const navigate = useNavigate();
-  const isLoggedIn = !!localStorage.getItem("access_token");
+  const accessToken = localStorage.getItem("access_token");
+  const isLoggedIn = !!accessToken;
 
+  // Getting the role
+  let role = null;
+  if (accessToken) {
+    try {
+      const payload = JSON.parse(atob(accessToken.split(".")[1]));
+      role = payload.role;
+    } catch (err) {
+      console.error("Failed to decode token:", err);
+    }
+  }
+
+  // Signing out logic
   const handleLogout = () => {
     localStorage.clear();
     toast.success("Logged out successfully!");
@@ -32,18 +48,37 @@ function Navbar() {
   };
 
   return (
+    // navigation bar based on user role and login status
     <nav className="navbar">
       <Link to="/">Home</Link> {" "}
 
-      {isLoggedIn ? (
-        <>
-          <Link to="/events">Events</Link> {"  "}
-          <button onClick={handleLogout} className="button-style">Sign Out</button>
-        </>
-      ) : (
+      {!isLoggedIn && (
         <>
           <Link to="/login">Login</Link> {"  "}
           <Link to="/signup">Signup</Link> {"  "}
+        </>
+      )}
+
+      {isLoggedIn && role === "student" && (
+        <>
+          <Link to="/student">Student Dashboard</Link> {"  "}
+          <Link to="/events">Events</Link> {"  "}
+          <button onClick={handleLogout} className="button-style">Sign Out</button>
+        </>
+      )}
+
+      {isLoggedIn && role === "organizer" && (
+        <>
+          <Link to="/organizer">Organizer Dashboard</Link> {"  "}
+          <button onClick={handleLogout} className="button-style">Sign Out</button>
+        </>
+      )}
+
+      {isLoggedIn && role === "admin" && (
+        <>
+          <Link to="/admin">Admin Dashboard</Link> {"  "}
+          <Link to="/approval">Organizer Approval</Link> {"  "}
+          <button onClick={handleLogout} className="button-style">Sign Out</button>
         </>
       )}
     </nav>
@@ -58,11 +93,29 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/events" element={<ProtectedRoute><EventsList /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+
+        <Route path="/admin" element={
+          <ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>
+        } />
+        <Route path="/approval" element={
+          <ProtectedRoute roles={["admin"]}><OrganizerApproval/></ProtectedRoute>
+        } />
+
+        <Route path="/student" element={
+          <ProtectedRoute roles={["student"]}><StudentDashboard /></ProtectedRoute>
+        } />
+
+        <Route path="/events" element={
+          <ProtectedRoute roles={["student"]}><EventsList /></ProtectedRoute>
+        } />
+
+        <Route path="/organizer" element={
+          <ProtectedRoute roles={["organizer"]}><OrganizerDashboard /></ProtectedRoute>
+        } />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

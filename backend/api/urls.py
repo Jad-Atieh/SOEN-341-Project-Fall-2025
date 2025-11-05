@@ -17,7 +17,7 @@ Structure:
 """
 
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 from .views import (
     CreateUserView,
@@ -26,8 +26,13 @@ from .views import (
     EventDetailView,
     UserListView,
     ClaimTicketView,
+    MyTokenObtainPairView,
     ManageUserStatusView,
     ManageEventStatusView,
+    OrganizerUpdateEventView,
+    EventAnalyticsView,
+    CheckInTicketView,
+    ExportTicketsCSVView,
 )
 
 urlpatterns = [
@@ -53,6 +58,11 @@ urlpatterns = [
     path("users/manage/", ManageUserStatusView.as_view(), name="manage-user-status"),
     # Endpoint: PATCH /api/users/approve/<id>/
     # → Admin can approve a pending organizer account.
+    # Example:
+    # {
+    #   "email": "jane@example.com",
+    #   "status": "active"
+    # }
 
     # -------------------------------
     # EVENT MANAGEMENT
@@ -68,9 +78,23 @@ urlpatterns = [
     # - PUT/PATCH /api/events/<id>/ → Update event (organizers only)
     # - DELETE /api/events/<id>/ → Delete event (organizers/admins)
 
+    path("events/organizer/<int:pk>/", OrganizerUpdateEventView.as_view(), name="organizer-event-update"),
+    # Endpoint:
+    # - PATCH /api/events/organizer/<id>/
+    # → Organizer-only endpoint to update their own events
+    # → Cannot modify event status (admin handles approval)
+
     path("events/manage/<int:event_id>/", ManageEventStatusView.as_view(), name="approve-event"),
     # Endpoint:
     # - PATCH /api/events/manage/<event_id>/
+    # Example:
+    # {
+    #   "status": "approved"
+    # }
+
+    path('events/<int:event_id>/analytics/', EventAnalyticsView.as_view(), name='event-analytics'),
+    # Endpoint: GET /api/events/<event_id>/analytics/
+    # → Returns analytics for a specific event.
 
     # -------------------------------
     # TICKET MANAGEMENT
@@ -82,11 +106,19 @@ urlpatterns = [
     # -------------------------------
     # JWT AUTHENTICATION (LOGIN & TOKEN REFRESH)
     # -------------------------------
-    path("token/",TokenObtainPairView.as_view(),name="get_token"),
+    path("token/",MyTokenObtainPairView.as_view(),name="get_token"),
     # Endpoint: POST /api/token/
     # → Authenticates user and returns access + refresh JWT tokens.
 
     path("token/refresh/",TokenRefreshView.as_view(),name="refresh"),
     # Endpoint: POST /api/token/refresh/
     # → Refreshes the JWT access token when it expires.
+
+    path("tickets/checkin/", CheckInTicketView.as_view(), name="checkin-ticket"),
+    # Endpoint: POST /api/tickets/checkin/
+    # → Allows an organizer or admin to check in an attendee using the QR code.
+
+    path("tickets/export/<int:event_id>/", ExportTicketsCSVView.as_view(), name="export-tickets"),
+    # Endpoint: GET /api/tickets/export/<event_id>/
+    # → Exports all tickets for a specific event as a CSV file.
 ]

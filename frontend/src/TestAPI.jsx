@@ -8,11 +8,11 @@ function TestAPI() {
     // Example: Fetch from Django's /api/events/
     api.get("events/")
       .then(response => {
-        console.log("✅ API Response:", response.data);
+        console.log("API Response:", response.data);
         setData(response.data);
       })
       .catch(error => {
-        console.error("❌ API Error:", error);
+        console.error("API Error:", error);
       });
   }, []);
 

@@ -174,9 +174,6 @@ class Event(models.Model):
     )
     approved_at = models.DateTimeField(null=True, blank=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_discovered = models.BooleanField(default=False)
-
     def __str__(self):
         """Readable representation of the event."""
         return f"{self.title} ({self.approval_status})"

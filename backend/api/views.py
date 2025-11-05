@@ -13,13 +13,20 @@ Each class below corresponds to a specific API endpoint and defines:
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import generics, permissions, status, exceptions
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Event, Ticket, AuditLog
-from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer)
+from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer)
 from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin)
+from django.db.models import Count, Q
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.http import HttpResponse
+import csv
+
 
 # Get custom user model
 User = get_user_model()
@@ -40,22 +47,26 @@ class CreateUserView(generics.CreateAPIView):
     - Public (Anyone can register)
     """
 
-serializer_class = RegisterSerializer
-permission_classes = [AllowAny] # Anyone can register (no login required)
+    serializer_class = RegisterSerializer
+    permission_classes = [AllowAny] # Anyone can register (no login required)
 
-def create(self, request, *args, **kwargs):
-    """Custom response after successful registration."""
-    serializer = self.get_serializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    user = serializer.save()
+    def get(self, request, *args, **kwargs):
+        """Prevent DRF browser from crashing when visiting signup via GET."""
+        return Response({"message": "Use POST to register a new user."})
 
-    return Response({
-        "id": user.id,
-        "name": user.name,
-        "role": user.role,
-        "status": user.status,
-        "message": "Account created successfully. Awaiting admin approval."
-    }, status=status.HTTP_201_CREATED)
+    def create(self, request, *args, **kwargs):
+        """Custom response after successful registration."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        return Response({
+            "id": user.id,
+            "name": user.name,
+            "role": user.role,
+            "status": user.status,
+            "message": "Account created successfully. Awaiting admin approval."
+        }, status=status.HTTP_201_CREATED)
 
 # ------------------------------------
 # USER LOGIN (JWT)
@@ -120,25 +131,44 @@ class EventListCreateView(generics.ListCreateAPIView):
     - POST: Allows only organizers to create new events (auto-linked to their account)
 
     Access:
-    - GET: Students, Organizers, and Admins
+    - GET: Public (no login required) — shows only approved events
     - POST: Organizers only
     """
 
     serializer_class = EventSerializer
 
     def get_permissions(self):
-        """Dynamically assign permissions based on request type."""
+        """Allow public access for GET; restrict POST to organizers."""
         if self.request.method == 'POST':
             return [IsOrganizer()]  # Only organizers can create
-        return [IsStudentOrOrganizerOrAdmin()]  # All authenticated users can view
+        return [AllowAny()]  # Public can view events
 
     def perform_create(self, serializer):
         """Automatically assign the current user as the event organizer."""
-        serializer.save(organizer=self.request.user)
+        serializer.save(organizer=self.request.user, approval_status='pending')
 
     def get_queryset(self):
         """Supports filtering by date, category, or organization."""
         queryset = Event.objects.all()
+        user = self.request.user
+
+        # 1. Public (not logged in)
+        if not user.is_authenticated:
+            queryset = queryset.filter(approval_status='approved')
+
+        # 2. Students: see only approved events
+        elif user.role == 'student':
+            queryset = queryset.filter(approval_status='approved')
+
+        # 3. Organizers: see all their own events
+        elif user.role == 'organizer':
+            queryset = queryset.filter(organizer=user)
+
+        # 4. Admins: see all events
+        elif user.role == 'admin':
+            queryset = queryset.all()
+
+        # Filter options for convenience
         date = self.request.query_params.get('date')
         category = self.request.query_params.get('category')
         organization = self.request.query_params.get('organization')
@@ -160,11 +190,11 @@ class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
     Manages actions for individual events.
 
     Behavior:
-    - GET: Any authenticated user can view event details
+    - GET: Any user can view event details
     - PUT/PATCH/DELETE: Only organizers can edit or delete their events
 
     Access:
-    - GET: Students/Organizers/Admins
+    - GET: Public
     - PUT/PATCH/DELETE: Organizers only
     """
 
@@ -174,7 +204,7 @@ class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
         """Control access by role and request type."""
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
             return [IsOrganizer()]
-        return [IsStudentOrOrganizerOrAdmin()]
+        return [AllowAny()]
 
     def get_queryset(self):
         """Retrieve events."""
@@ -310,16 +340,19 @@ class ManageEventStatusView(APIView):
     Access:
     - Admins only.
     """
-
+    serializer_class = EventSerializer
     permission_classes = [IsAdmin]
 
-    def patch(self, request, event_id):
-        """Approve or reject an event by ID."""
-        new_status = request.data.get("status")
+    def get_queryset(self):
+        return Event.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        event = self.get_object()
+        new_status = request.data.get('status')
 
         # Validate status input
-        if new_status not in ["approved", "rejected"]:
-            return Response({"error": "Invalid status. Choose 'approved' or 'rejected'."},
+        if new_status not in ['approved', 'pending', 'rejected']:
+            return Response({"error": "Invalid status. Must be 'approved', 'pending', or 'rejected'."},
                             status=status.HTTP_400_BAD_REQUEST)
 
         # Retrieve event
@@ -343,6 +376,176 @@ class ManageEventStatusView(APIView):
         )
 
         return Response({
-            "message": f"Event '{event.title}' marked as {new_status}.",
-            "event": EventSerializer(event).data,
+            "id": event.id,
+            "title": event.title,
+            "status": event.status,
+            "message": f"Event successfully set to '{new_status}'."
         }, status=status.HTTP_200_OK)
+
+# ------------------------------------
+# ORGANIZER EVENT UPDATE (NO STATUS CHANGE)
+# ------------------------------------
+class OrganizerUpdateEventView(generics.UpdateAPIView):
+    """
+    Allows organizers to update their own event details,
+    but they cannot modify the event's status.
+
+    Access:
+    - Organizer only.
+    """
+
+    serializer_class = EventSerializer
+    permission_classes = [IsOrganizer]
+
+    def get_queryset(self):
+        """
+        Restrict organizers to only their own events.
+        Admins cannot use this endpoint.
+        """
+        return Event.objects.filter(organizer=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Remove 'status' from incoming data so it cannot be changed.
+        """
+        data = request.data.copy()
+        data.pop('status', None)  # Prevent organizers from changing status
+
+        # Retrieve event (must belong to the organizer)
+        event = self.get_object()
+
+        # Perform partial update (PATCH)
+        serializer = self.get_serializer(event, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "id": event.id,
+            "title": event.title,
+            "updated_fields": list(data.keys()),
+            "message": "Event updated successfully (status unchanged)."
+        }, status=status.HTTP_200_OK)
+    
+# ------------------------------------
+# JWT TOKEN VIEW CUSTOMIZATION
+# ------------------------------------
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+
+    # ------------------------------------
+# EVENT ANALYTICS 
+# ------------------------------------
+class EventAnalyticsView(APIView):
+    """
+    Returns analytics for a specific event.
+
+    Accessible by:
+      - The event organizer
+      - Admin users
+
+    Returns:
+      - total_tickets: number of claimed tickets
+      - checked_in_attendees: number of attendees checked in
+      - capacity: max allowed attendees
+    """
+    permission_classes = [IsAuthenticated, IsStudentOrOrganizerOrAdmin]
+
+    def get(self, request, event_id):
+        event = get_object_or_404(Event, id=event_id)
+
+        # Organizer can view
+        if not (request.user == event.organizer or request.user.role == "admin"):
+            return Response(
+                {"error": "You are not authorized to view this event's analytics."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        analytics = (
+            Event.objects.filter(id=event_id)
+            .annotate(
+                total_tickets=Count("tickets"),
+                checked_in_attendees=Count("tickets", filter=Q(tickets__status="used")),
+            )
+            .values("id", "title", "capacity", "total_tickets", "checked_in_attendees")
+            .first()
+        )
+
+        if not analytics:
+            analytics = {
+                "id": event.id,
+                "title": event.title,
+                "capacity": event.capacity,
+                "total_tickets": 0,
+                "checked_in_attendees": 0,
+            }
+
+        return Response(analytics, status=status.HTTP_200_OK)
+
+# ------------------------------------
+# Check in Ticket View 
+# ------------------------------------
+class CheckInTicketView(APIView):
+    """
+    Allows an organizer or admin to check in an attendee using the QR code.
+    Marks the ticket as 'used' and records the check-in time.
+    """
+    permission_classes = [IsAuthenticated, IsOrganizer | IsAdmin]
+
+    def post(self, request):
+        qr_code = request.data.get("qr_code")
+
+        if not qr_code:
+            return Response({"error": "QR code is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            ticket = Ticket.objects.get(qr_code=qr_code)
+        except Ticket.DoesNotExist:
+            return Response({"error": "Invalid QR code."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Only event organizer or admin can check in
+        if request.user != ticket.event.organizer:
+            return Response(
+                {"error": "You are not authorized to check in attendees for this event."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+
+        if ticket.status == "used":
+            return Response({"message": "This ticket has already been used."}, status=status.HTTP_200_OK)
+
+        ticket.status = "used"
+        ticket.used_at = timezone.now()
+        ticket.save()
+
+        return Response(
+            {
+                "message": "Ticket successfully checked in.",
+                "user": ticket.user.name,
+                "event": ticket.event.title,
+                "checked_in_at": ticket.used_at,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+# ------------------------------------
+# Export Tickets as CSV
+# ------------------------------------
+class ExportTicketsCSVView(APIView):
+    permission_classes = [IsAdminUser]  # only admin/staff
+
+    def get(self, request, event_id):
+        tickets = Ticket.objects.filter(event_id=event_id).select_related('user', 'event')
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="event_{event_id}_tickets.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Student', 'Event', 'Status', 'Claimed At', 'Used At'])
+        for t in tickets:
+            writer.writerow([
+                t.user.username,
+                t.event.title,
+                t.status,
+                t.claimed_at,
+                t.used_at or ''
+            ])
+        return response
