@@ -16,6 +16,7 @@ from rest_framework import generics, permissions, status, exceptions
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Event, Ticket, AuditLog
@@ -432,7 +433,7 @@ class OrganizerUpdateEventView(generics.UpdateAPIView):
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
-    # ------------------------------------
+# ------------------------------------
 # EVENT ANALYTICS 
 # ------------------------------------
 class EventAnalyticsView(APIView):
@@ -553,6 +554,7 @@ class ExportTicketsCSVView(APIView):
 # ------------------------------------
 # STUDENT DASHBOARD API
 # ------------------------------------
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def student_dashboard(request):
@@ -613,23 +615,21 @@ def student_dashboard(request):
                 "email": user.email,
                 "member_since": user.created_at.strftime("%B %Y")
             },
-# temporarily commented out for now, will fix later
-#            "quick_stats": {
-#                "events_today": todays_events.count(),
-#                "upcoming_events": upcoming_events.count(),
-#                "active_tickets": ticket_counts['active_tickets'],
-#                "total_attended": ticket_counts['used_tickets'],
-#            },
-#            "ticket_stats": {
-#                "total": ticket_counts['total_tickets'],
-#                "active": ticket_counts['active_tickets'],
-#                "used": ticket_counts['used_tickets'],
-#                "cancelled": ticket_counts['cancelled_tickets']
-#            },
-#            "todays_events": EventSerializer(todays_events, many=True).data,
-#            "upcoming_events": EventSerializer(upcoming_events, many=True).data,
-#            "recent_activity": TicketSerializer(recent_tickets, many=True).data,
-#            "recommended_events": EventSerializer(recommended_events, many=True).data
+            "quick_stats": {
+                "events_today": todays_events.count(),
+                "upcoming_events": upcoming_events.count(),
+                "active_tickets": ticket_counts['active_tickets'],
+                "total_attended": ticket_counts['used_tickets'],
+            },
+            "ticket_stats": {
+                "total": ticket_counts['total_tickets'],
+                "active": ticket_counts['active_tickets'],
+                "used": ticket_counts['used_tickets'],
+            },
+            "todays_events": EventSerializer(todays_events, many=True).data,
+            "upcoming_events": EventSerializer(upcoming_events, many=True).data,
+            "recent_activity": TicketSerializer(recent_tickets, many=True).data,
+            "recommended_events": EventSerializer(recommended_events, many=True).data
         }
         
         return Response(dashboard_data)
@@ -639,3 +639,45 @@ def student_dashboard(request):
             {"error": "Unable to load dashboard data."}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+# ------------------------------------
+# TICKET MANAGEMENT API
+# ------------------------------------
+
+class StudentTicketListView(generics.ListAPIView):
+    """
+    GET /api/student/tickets
+    Returns all tickets for the authenticated student user
+    Includes event information and ticket status
+    """
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # return only tickets belonging to the current student user
+        return Ticket.objects.filter(user=self.request.user).select_related('event')
+
+class StudentTicketDetailView(generics.RetrieveAPIView):
+    """
+    GET /api/student/tickets/{id}
+    Returns individual ticket details for the authenticated student
+    Includes full event information and ticket status
+    """
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # students can only access their own tickets
+        return Ticket.objects.filter(user=self.request.user).select_related('event')
+
+    def get_object(self):
+        # get the ticket ID from URL
+        ticket_id = self.kwargs.get('id')
+        
+        # error handling
+        ticket = get_object_or_404(
+            Ticket, 
+            id=ticket_id, 
+            user=self.request.user  # ensure user owns the ticket
+        )
+        return ticket
