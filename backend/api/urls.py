@@ -30,6 +30,9 @@ from .views import (
     ManageUserStatusView,
     ManageEventStatusView,
     OrganizerUpdateEventView,
+    EventAnalyticsView,
+    CheckInTicketView,
+    ExportTicketsCSVView,
     student_dashboard,
 )
 
@@ -90,6 +93,10 @@ urlpatterns = [
     #   "status": "approved"
     # }
 
+    path('events/<int:event_id>/analytics/', EventAnalyticsView.as_view(), name='event-analytics'),
+    # Endpoint: GET /api/events/<event_id>/analytics/
+    # → Returns analytics for a specific event.
+
     # -------------------------------
     # TICKET MANAGEMENT
     # -------------------------------
@@ -107,6 +114,14 @@ urlpatterns = [
     path("token/refresh/",TokenRefreshView.as_view(),name="refresh"),
     # Endpoint: POST /api/token/refresh/
     # → Refreshes the JWT access token when it expires.
+
+    path("tickets/checkin/", CheckInTicketView.as_view(), name="checkin-ticket"),
+    # Endpoint: POST /api/tickets/checkin/
+    # → Allows an organizer or admin to check in an attendee using the QR code.
+
+    path("tickets/export/<int:event_id>/", ExportTicketsCSVView.as_view(), name="export-tickets"),
+    # Endpoint: GET /api/tickets/export/<event_id>/
+    # → Exports all tickets for a specific event as a CSV file.
 
     # -------------------------------
     # DASHBOARD
