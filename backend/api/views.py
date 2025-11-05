@@ -492,22 +492,23 @@ def student_dashboard(request):
                 "email": user.email,
                 "member_since": user.created_at.strftime("%B %Y")
             },
-            "quick_stats": {
-                "events_today": todays_events.count(),
-                "upcoming_events": upcoming_events.count(),
-                "active_tickets": ticket_counts['active_tickets'],
-                "total_attended": ticket_counts['used_tickets'],
-            },
-            "ticket_stats": {
-                "total": ticket_counts['total_tickets'],
-                "active": ticket_counts['active_tickets'],
-                "used": ticket_counts['used_tickets'],
-                "cancelled": ticket_counts['cancelled_tickets']
-            },
-            "todays_events": EventSerializer(todays_events, many=True).data,
-            "upcoming_events": EventSerializer(upcoming_events, many=True).data,
-            "recent_activity": TicketSerializer(recent_tickets, many=True).data,
-            "recommended_events": EventSerializer(recommended_events, many=True).data
+# temporarily commented out for now, will fix later
+#            "quick_stats": {
+#                "events_today": todays_events.count(),
+#                "upcoming_events": upcoming_events.count(),
+#                "active_tickets": ticket_counts['active_tickets'],
+#                "total_attended": ticket_counts['used_tickets'],
+#            },
+#            "ticket_stats": {
+#                "total": ticket_counts['total_tickets'],
+#                "active": ticket_counts['active_tickets'],
+#                "used": ticket_counts['used_tickets'],
+#                "cancelled": ticket_counts['cancelled_tickets']
+#            },
+#            "todays_events": EventSerializer(todays_events, many=True).data,
+#            "upcoming_events": EventSerializer(upcoming_events, many=True).data,
+#            "recent_activity": TicketSerializer(recent_tickets, many=True).data,
+#            "recommended_events": EventSerializer(recommended_events, many=True).data
         }
         
         return Response(dashboard_data)
