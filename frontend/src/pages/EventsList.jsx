@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { useMemo, useState } from "react";
 import "./events-list.css";
 
@@ -70,6 +71,42 @@ export default function EventsList() {
           <div className="el-empty">No events match your filters.</div>
         )}
       </div>
+=======
+import React, { useMemo } from "react";
+import { Link } from "react-router-dom";
+import "./events.css";
+
+export default function EventsList() {
+  const items = useMemo(() => {
+    const saved = JSON.parse(localStorage.getItem("draftEvents") || "[]");
+    const seed = [
+      { id: "hack2025", title: "Hackathon 2025", date: "2025-11-10", time: "09:00", location: "Concordia EV Building", capacity: 100, taken: 20, category: "General" },
+      { id: "careerfair", title: "Career Fair", date: "2025-11-25", time: "10:00", location: "Hall Building", capacity: 500, taken: 120, category: "Recruiting" }
+    ];
+    return [...seed, ...saved];
+  }, []);
+
+  return (
+    <div className="events-container">
+      <header className="events-header">
+        <h1>Browse Events</h1>
+        <Link className="btn" to="/create-event">Create Event</Link>
+      </header>
+
+      <section className="events-grid">
+        {items.map(ev => (
+          <article className="event-card" key={ev.id}>
+            <h3>{ev.title}</h3>
+            <p><strong>Date:</strong> {ev.date}</p>
+            <p><strong>Time:</strong> {ev.time || "—"}</p>
+            <p><strong>Location:</strong> {ev.location}</p>
+            <p><strong>Category:</strong> {ev.category}</p>
+            <p><strong>Seats:</strong> {ev.taken}/{ev.capacity}</p>
+            <button className="btn">Register</button>
+          </article>
+        ))}
+      </section>
+>>>>>>> Stashed changes
     </div>
   );
 }
