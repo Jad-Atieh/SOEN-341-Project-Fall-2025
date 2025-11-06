@@ -63,7 +63,7 @@ urlpatterns = [
     # → Admin can manage a pending organizer account.
     # Example:
     # {
-    #   "email": "jane@example.com",
+    #   "email": "tom@hotmail.com",
     #   "status": "active"
     # }
 
