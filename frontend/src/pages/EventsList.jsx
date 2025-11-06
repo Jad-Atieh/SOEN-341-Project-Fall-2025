@@ -1,41 +1,48 @@
-import React from "react";
-import "../styles/style.css"; 
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import api from "../api"; 
+import Table from "../components/Table";
 
-const EventsList = () => {
-    return (
-        <div className="events-container">
-            <header className="events-header">
-                <h1>Browse Events</h1>
-            </header>
+function EventList() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-            <section className="events">
-                <div className="event-card">
-                    <h3>Hackathon 2025</h3>
-                    <p><strong>Date:</strong> 2025-11-10</p>
-                    <p><strong>Location:</strong> Concordia EV Building</p>
-                    <p>Collaborate and innovate in our annual student hackathon!</p>
-                    <button>Register</button>
-                </div>
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await api.get("/api/events/"); 
+        setEvents(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
 
-                <div className="event-card">
-                    <h3>Career Fair</h3>
-                    <p><strong>Date:</strong> 2025-11-25</p>
-                    <p><strong>Location:</strong> Hall Building</p>
-                    <p>Meet top recruiters and explore internship opportunities.</p>
-                    <button>Register</button>
-                </div>
+  if (loading) return <p>Loading events...</p>;
 
-                <div className="event-card">
-                    <h3>Wellness Workshop</h3>
-                    <p><strong>Date:</strong> 2025-12-03</p>
-                    <p><strong>Location:</strong> Online</p>
-                    <p>Learn techniques to reduce stress and improve balance.</p>
-                    <button disabled>Sold Out</button>
-                </div>
-            </section>
-        </div>
-    );
-};
+  const columns = [
+    { header: "Title", accessor: "title" },
+    { header: "Date", accessor: "date" },
+    { header: "Start Time", accessor: "start_time" },
+    { header: "End Time", accessor: "end_time" },
+    { header: "Location", accessor: "location" },
+    { header: "Capacity", accessor: "capacity" },
+    { header: "Status", accessor: "approval_status" },
+  ];
 
-export default EventsList;
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">My Events</h1>
+
+      {events.length > 0 ? (
+        <Table columns={columns} data={events} />
+      ) : (
+        <p>No events available.</p>
+      )}
+    </div>
+  );
+}
+
+export default EventList;

@@ -1,8 +1,8 @@
-function NotFound() {
-    return <div>
-        <h1>404 Not Found</h1>
-        <p>The page you're looking for doesn't exist!</p>
+export default function NotFound() {
+  return (
+    <div style={{ padding: 32 }}>
+      <h1>404</h1>
+      <p>Page not found.</p>
     </div>
+  );
 }
-
-export default NotFound

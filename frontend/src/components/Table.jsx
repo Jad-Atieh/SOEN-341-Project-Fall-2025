@@ -1,45 +1,32 @@
 import React from "react";
+import "../styles/Table.css"; 
 
 const Table = ({ columns, data, actions }) => {
   return (
-    <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-      <table className="min-w-full border-collapse">
-        <thead className="bg-gray-100 text-gray-700">
+    <div className="table-container">
+      <table className="table">
+        <thead>
           <tr>
             {columns.map((col) => (
-              <th key={col.accessor} className="px-4 py-2 text-left">
-                {col.header}
-              </th>
+              <th key={col.accessor}>{col.header}</th>
             ))}
-            {actions && <th className="px-4 py-2 text-left">Actions</th>}
+            {actions && <th>Actions</th>}
           </tr>
         </thead>
 
         <tbody>
           {data.map((row, idx) => (
-            <tr
-              key={idx}
-              className="border-t hover:bg-gray-50 transition duration-150"
-            >
+            <tr key={idx} className={idx % 2 === 0 ? "even-row" : "odd-row"}>
               {columns.map((col) => (
-                <td key={col.accessor} className="px-4 py-2">
-                  {row[col.accessor]}
-                </td>
+                <td key={col.accessor}>{row[col.accessor]}</td>
               ))}
-
               {actions && (
-                <td className="px-4 py-2 flex gap-2">
+                <td className="actions">
                   {actions.map((action, i) => (
                     <button
                       key={i}
                       onClick={() => action.onClick(row)}
-                      className={`px-3 py-1 rounded-md text-sm ${
-                        action.type === "approve"
-                          ? "bg-green-500 text-white"
-                          : action.type === "reject"
-                          ? "bg-red-500 text-white"
-                          : "bg-gray-200"
-                      }`}
+                      className={`btn ${action.type}`}
                     >
                       {action.label}
                     </button>
