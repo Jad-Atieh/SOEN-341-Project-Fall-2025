@@ -1,0 +1,65 @@
+.table-container {
+    overflow-x: auto;
+    background-color: white;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  
+  thead {
+    background-color: #1e3a8a; /* Blue header */
+    color: white;
+  }
+  
+  .even-row {
+    background-color: #f9fafb;
+  }
+  
+  .odd-row {
+    background-color: white;
+  }
+  
+  tr:hover {
+    background-color: #f0f4f8;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .btn {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    border: none;
+  }
+  
+  .btn.approve {
+    background-color: #22c55e; /* Green */
+    color: white;
+  }
+  
+  .btn.reject {
+    background-color: #ef4444; /* Red */
+    color: white;
+  }
+  
+  .btn.default {
+    background-color: #e5e7eb; /* Gray */
+    color: #111827;
+  }
+  
