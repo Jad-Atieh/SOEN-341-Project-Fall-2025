@@ -56,7 +56,7 @@ urlpatterns = [
     # → Admin can view all users.
 
     path("users/manage/", ManageUserStatusView.as_view(), name="manage-user-status"),
-    # Endpoint: PATCH /api/users/manage/<id>/
+    # Endpoint: PATCH /api/users/manage/
     # → Admin can manage a pending organizer account.
     # Example:
     # {
@@ -84,7 +84,7 @@ urlpatterns = [
     # → Organizer-only endpoint to update their own events
     # → Cannot modify event status (admin handles approval)
 
-    path("events/manage/<int:event_id>/", ManageEventStatusView.as_view(), name="approve-event"),
+    path("events/manage/<int:event_id>/", ManageEventStatusView.as_view(), name="manage-event"),
     # Endpoint:
     # - PATCH /api/events/manage/<event_id>/
     # Example:
