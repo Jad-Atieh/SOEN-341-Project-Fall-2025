@@ -56,8 +56,8 @@ urlpatterns = [
     # → Admin can view all users.
 
     path("users/manage/", ManageUserStatusView.as_view(), name="manage-user-status"),
-    # Endpoint: PATCH /api/users/approve/<id>/
-    # → Admin can approve a pending organizer account.
+    # Endpoint: PATCH /api/users/manage/<id>/
+    # → Admin can manage a pending organizer account.
     # Example:
     # {
     #   "email": "jane@example.com",
