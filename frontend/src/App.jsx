@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import Home from "./pages/Home";
 import EventsList from "./pages/EventsList";
+import EditEvent from "./pages/EditEvent";
 import CreateEvent from "./pages/CreateEvent";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import OrganizerAnalytics from "./pages/OrganizerAnalytics";
@@ -151,6 +152,9 @@ function App() {
        <Route path="/create-event" element={
          <ProtectedRoute roles={["organizer"]}><CreateEvent /></ProtectedRoute>
        } />
+        <Route path="/edit-event/:id" element={
+          <ProtectedRoute roles={["organizer"]}><EditEvent /></ProtectedRoute>
+        } />
 
 
        {/* Catch-all route */}

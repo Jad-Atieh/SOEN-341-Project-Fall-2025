@@ -1,154 +1,172 @@
-/**
- * CreateEventForm Component
- *
- * This React component handles creating new events for organizers.
- * It collects fields like title, description, date, times, location, capacity, ticket type, category, and organization.
- * On submission, it posts the event data to the backend and redirects to the organizer dashboard.
- */
-
-import { useState } from "react";
-import api from "../api";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/Forms.css";
-import LoadingIndicator from "./LoadingIndicator";
+import api from "../api";
+import "../styles/Forms.css"; // make sure this path is correct
 
-function EventForm() {
+function EventForm({ eventId }) {
   const navigate = useNavigate();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [location, setLocation] = useState("");
-  const [capacity, setCapacity] = useState("");
-  const [ticketType, setTicketType] = useState("free"); 
-  const [category, setCategory] = useState("");
-  const [organization, setOrganization] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(eventId ? true : false);
+
+  
+let role = null;
+const accessToken = localStorage.getItem("access");
+
+if (accessToken) {
+  try {
+    const payload = JSON.parse(atob(accessToken.split(".")[1]));
+    role = payload.role;
+  } catch (err) {
+    console.error("Failed to decode token:", err);
+  }
+}
+
+  const [form, setForm] = useState({
+    title: "",
+    date: "",
+    start_time: "",
+    end_time: "",
+    location: "",
+    capacity: "",
+    description: "",
+    approval_status: "pending",
+  });
+
+  useEffect(() => {
+    if (!eventId) return;
+
+    const fetchEvent = async () => {
+      try {
+        const res = await api.get(`/api/events/${eventId}/`);
+        setForm(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvent();
+  }, [eventId]);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
-      await api.post("/api/events/", {
-        title,
-        description,
-        date,
-        start_time: startTime,
-        end_time: endTime,
-        location,
-        capacity,
-        ticket_type: ticketType,
-        category,
-        organization,
-        approval_status: "pending",
-      });
+      if (eventId) {
+        await api.put(`/api/events/${eventId}/`, form);
+      } else {
+        await api.post("/api/events/", form);
+      }
 
-      alert("Event created! Awaiting admin approval.");
-      navigate("/organizer");
-    } catch (error) {
-      console.error(error.response?.data);
-      alert("Failed to create event.");
-    } finally {
-      setLoading(false);
+      
+      if (role === "organizer") {
+        navigate("/organizer");
+      } else if (role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/"); 
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert("Error saving event");
     }
   };
 
+  if (loading) return <p className="loading-indicator">Loading...</p>;
+
   return (
-    <form onSubmit={handleSubmit} className="form-container">
-      <h1>Create New Event</h1>
+    <div className="form-container">
+      <h1>{eventId ? "Edit Event" : "Create Event"}</h1>
 
-      <input
-        type="text"
-        placeholder="Event Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="form-input"
-        required
-      />
+      <form onSubmit={handleSubmit} style={{ width: "100%" }}>
 
-      <textarea
-        placeholder="Description (optional)"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        className="form-input"
-        rows={3}
-      />
+        <input
+          className="form-input"
+          name="title"
+          placeholder="Title"
+          value={form.title}
+          onChange={handleChange}
+          required
+        />
 
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        className="form-input"
-        required
-      />
+        <input
+          className="form-input"
+          type="date"
+          name="date"
+          value={form.date}
+          onChange={handleChange}
+          required
+        />
 
-      <input
-        type="time"
-        value={startTime}
-        onChange={(e) => setStartTime(e.target.value)}
-        className="form-input"
-        required
-      />
+        <input
+          className="form-input"
+          type="time"
+          name="start_time"
+          value={form.start_time}
+          onChange={handleChange}
+          required
+        />
 
-      <input
-        type="time"
-        value={endTime}
-        onChange={(e) => setEndTime(e.target.value)}
-        className="form-input"
-        required
-      />
+        <input
+          className="form-input"
+          type="time"
+          name="end_time"
+          value={form.end_time}
+          onChange={handleChange}
+          required
+        />
 
-      <input
-        type="text"
-        placeholder="Location"
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-        className="form-input"
-        required
-      />
+        <input
+          className="form-input"
+          name="location"
+          placeholder="Location"
+          value={form.location}
+          onChange={handleChange}
+          required
+        />
 
-      <input
-        type="number"
-        placeholder="Capacity"
-        value={capacity}
-        onChange={(e) => setCapacity(e.target.value)}
-        className="form-input"
-        required
-      />
+        <input
+          className="form-input"
+          type="number"
+          name="capacity"
+          placeholder="Capacity"
+          value={form.capacity}
+          onChange={handleChange}
+          required
+        />
 
-      <select
-        value={ticketType}
-        onChange={(e) => setTicketType(e.target.value)}
-        className="form-input"
-      >
-        <option value="free">Free</option>
-        <option value="paid">Paid</option>
-      </select>
+        <textarea
+          className="form-input"
+          name="description"
+          placeholder="Description"
+          value={form.description}
+          onChange={handleChange}
+        />
 
-      <input
-        type="text"
-        placeholder="Category (optional)"
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-        className="form-input"
-      />
+        {eventId && (
+          <select
+            className="form-input"
+            name="approval_status"
+            value={form.approval_status}
+            onChange={handleChange}
+          >
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        )}
 
-      <input
-        type="text"
-        placeholder="Organization (optional)"
-        value={organization}
-        onChange={(e) => setOrganization(e.target.value)}
-        className="form-input"
-      />
+        <button className="form-button" type="submit">
+          {eventId ? "Save Changes" : "Create Event"}
+        </button>
 
-      {loading && <LoadingIndicator />}
-
-      <button type="submit" className="form-button">
-        Create Event
-      </button>
-    </form>
+      </form>
+    </div>
   );
 }
 

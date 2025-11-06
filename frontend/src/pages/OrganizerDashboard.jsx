@@ -33,13 +33,13 @@ function OrganizerDashboard() {
     { header: "Status", accessor: "approval_status" },
   ];
 
-  // Action handlers
+  
   const actions = [
     {
       label: "Edit",
       type: "edit",
       onClick: (row) => {
-        navigate(`/create-event?id=${row.id}`);
+        navigate(`/edit-event/${row.id}`);
       },
     },
     {
