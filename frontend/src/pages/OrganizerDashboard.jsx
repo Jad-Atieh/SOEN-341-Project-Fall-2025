@@ -35,7 +35,7 @@ function downloadCSV(filename, rows) {
   URL.revokeObjectURL(url);
 }
 
-export default function OrganizerDashboard() {
+function OrganizerDashboard() {
   const events = useMemo(() => readEvents(), []);
 
   const totals = useMemo(() => {
@@ -153,3 +153,5 @@ export default function OrganizerDashboard() {
     </div>
   );
 }
+
+export default OrganizerDashboard;

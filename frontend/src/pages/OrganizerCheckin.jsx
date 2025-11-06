@@ -3,7 +3,7 @@ import { Html5Qrcode, Html5QrcodeScanner } from "html5-qrcode";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 
-export default function OrganizerCheckin() {
+function OrganizerCheckin() {
   const [code, setCode] = useState("");
   const [status, setStatus] = useState("");
   const scannerRef = useRef(null);
@@ -83,3 +83,5 @@ export default function OrganizerCheckin() {
     </div>
   );
 }
+
+export default OrganizerCheckin;
