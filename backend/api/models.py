@@ -177,9 +177,6 @@ class Event(models.Model):
     def __str__(self):
         """Readable representation of the event."""
         return f"{self.title} ({self.approval_status})"
-    
-    class Meta:
-        db_table = 'events'
 
 # ============================================================
 # AUDIT MODEL
