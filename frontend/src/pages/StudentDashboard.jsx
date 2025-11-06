@@ -9,7 +9,6 @@ function StudentDashboard() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        // Backend already returns only approved events for students
         const res = await api.get("/api/events/"); 
         setEvents(res.data); 
       } catch (err) {
