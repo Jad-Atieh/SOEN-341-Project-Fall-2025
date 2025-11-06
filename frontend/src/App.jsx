@@ -147,10 +147,10 @@ function App() {
          <ProtectedRoute roles={["organizer"]}><OrganizerCheckin /></ProtectedRoute>
        } />
        <Route path="/create-event" element={
-         <ProtectedRoute roles={["organizer"]}><CreateEvent /></ProtectedRoute>
+         <ProtectedRoute roles={["organizer", "admin"]}><CreateEvent /></ProtectedRoute>
        } />
         <Route path="/edit-event/:id" element={
-          <ProtectedRoute roles={["organizer"]}><EditEvent /></ProtectedRoute>
+          <ProtectedRoute roles={["organizer", "admin"]}><EditEvent /></ProtectedRoute>
         } />
 
 
