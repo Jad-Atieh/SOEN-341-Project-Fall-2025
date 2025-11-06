@@ -74,7 +74,7 @@ urlpatterns = [
     # Endpoint:
     # - GET /api/events/ → List all events (with filters)
     # - POST /api/events/ → Create a new event (organizers only)
-
+    
     path("events/<int:pk>/",EventDetailView.as_view(),name="event-detail"),
     # Endpoint:
     # - GET /api/events/<id>/ → Retrieve event details
