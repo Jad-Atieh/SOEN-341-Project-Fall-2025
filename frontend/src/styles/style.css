@@ -1,80 +1,82 @@
-/* General page layout */
-body {
-  font-family: "Poppins", Arial, sans-serif;
-  background-color: #f8f9fa;
-  margin: 0;
-  padding: 0;
-  color: #333;
+/*********************************************************************************************************/
+/****************************         EVENT LIST PAGE         ********************************************/
+/*********************************************************************************************************/
+.events-container {
+  min-height: 100vh;
+  background: #F3F4FF;
+  padding: 2rem;
 }
 
-/* Header */
-header {
-  background-color: #004aad;
-  color: white;
+.events-header {
   text-align: center;
-  padding: 1.5rem 0;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
 }
 
-header h1 {
+.events-header h1 {
+  font-size: 2.5rem;
+  color: #5B2C6F; /* deep purple */
   margin: 0;
-  font-size: 1.8rem;
+  letter-spacing: 1px;
 }
 
-/* Section titles */
-h2 {
-  text-align: center;
-  color: #004aad;
-  margin-top: 1.5rem;
-}
-
-/* Event cards (Browse Event Page) */
+/* Event grid */
 .events {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.2rem;
-  padding: 2rem;
-  max-width: 1000px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  padding: 0 2rem;
+  max-width: 1200px;
   margin: auto;
 }
 
 /* ===== EVENT CARD ===== */
 .event-card {
-  background-color: white;
-  border-radius: 10px;
-  padding: 1rem 1.2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease-in-out;
+  background: white;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .event-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
 }
 
-.event-card h3,
-.event-card h2 {
-  color: #004aad;
+.event-card h3 {
+  color: #5B2C6F; /* deep purple */
+  font-size: 1.4rem;
   margin-top: 0;
+  margin-bottom: 0.5rem;
 }
 
 .event-card p {
-  margin: 0.3rem 0;
+  margin: 0.4rem 0;
   font-size: 0.95rem;
+  color: #333;
 }
 
-/* ===== BUTTONS ===== */
-button {
-  background-color: #004aad;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+/* Status badges */
+.sold-out, .nearly-full {
+  font-weight: bold;
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  font-size: 0.85rem;
 }
 
-button:hover {
-  background-color: #003580;
+.sold-out {
+  background-color: #ffe5e5; /* keep red for sold out */
+  color: #d60000;
+}
+
+.nearly-full {
+  background-color: #e5e6ff; /* light blue accent */
+  color: #3F51B5; /* medium blue */
 }
 
 button[disabled] {
@@ -82,63 +84,235 @@ button[disabled] {
   cursor: not-allowed;
 }
 
-/* Status tags */
-.sold-out {
-  color: red;
-  font-weight: bold;
+/*********************************************************************************************************/
+/********************************       HOME PAGE         ************************************************/
+/*********************************************************************************************************/
+
+.home button:hover {
+  background-color: #3F51B5; /* medium blue */
+  transform: scale(1.03);
 }
 
-.nearly-full {
-  color: #ff9900;
-  font-weight: bold;
+.home button {
+  margin-top: auto;
+  background-color: #5B2C6F; /* deep purple */
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
 }
 
-/* Create Event Page */
-.create-event {
-  max-width: 600px;
-  margin: 2rem auto;
-  background-color: white;
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #F3F4FF;
 }
 
-form label {
-  display: block;
-  margin-top: 1rem;
-  font-weight: bold;
+.home-header {
+  text-align: center;
+  margin-bottom: 3rem;
 }
 
-form input,
-form textarea {
-  width: 100%;
-  padding: 0.6rem;
-  margin-top: 0.3rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  box-sizing: border-box;
+.home-header h1 {
+  font-size: 3rem;
+  color: #5B2C6F;
+  margin-bottom: 1rem;
+  letter-spacing: 1px;
 }
 
-form textarea {
-  height: 100px;
-  resize: none;
+.home-header p {
+  font-size: 1.25rem;
+  color: #333;
 }
 
-form button {
-  display: block;
-  margin: 1.5rem auto 0;
-  width: 50%;
+.home-card {
+  max-width: 500px;
+  padding: 2.5rem;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  border-radius: 15px;
+  background: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.home-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.home-card h2 {
+  color: #5B2C6F;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+}
+
+.home-card p {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 2rem;
+}
+
+.home-card .btn-container {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.home-card button {
+  flex: 1;
+  padding: 0.75rem;
   font-size: 1rem;
+  background-color: #5B2C6F;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
 }
 
-/* ===== EVENTS LIST PAGE (extra polish) ===== */
-.events-list .event-card {
-  text-align: left;
+.home-card button:hover {
+  background-color: #3F51B5;
+  transform: scale(1.03);
 }
 
-.events-list .event-card button {
-  margin-top: 0.8rem;
-  width: 100%;
-  font-size: 0.95rem;
+/*********************************************************************************************************/
+/********************************       NAV BAR           ************************************************/
+/*********************************************************************************************************/
+
+.navbar {
+  display: flex;
+  gap: 1.5rem; 
+}
+
+.navbar a,
+.button-style {
+  color: #000; 
+  text-decoration: none; 
+}
+
+.navbar a:hover,
+.button-style:hover {
+  color: #333; 
+  text-decoration: underline; 
+}
+
+.button-style {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 0;
+  display: inline;
+  margin-left: auto;
+}
+
+/*********************************************************************************************************/
+/****************************      STUDENT DASHBOARD       ***********************************************/
+/*********************************************************************************************************/
+
+.student-dashboard {
+  min-height: 100vh;
+  background: #F3F4FF;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.student-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.student-header h1 {
+  font-size: 2.5rem;
+  color: #5B2C6F;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.student-header p {
+  font-size: 1.1rem;
+  color: #333;
+  max-width: 600px;
+  margin: auto;
+}
+
+.student-no-events {
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  color: #333;
+  text-align: center;
+}
+
+/*********************************************************************************************************/
+/****************************      ORGANIZER DASHBOARD       ********************************************/
+/*********************************************************************************************************/
+
+.organizer-dashboard {
+  min-height: 100vh;
+  background: #F3F4FF;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.organizer-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.organizer-header h1 {
+  font-size: 2.5rem;
+  color: #5B2C6F;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.organizer-header p {
+  font-size: 1.1rem;
+  color: #333;
+  max-width: 600px;
+  margin: auto;
+  margin-bottom: 1rem;
+}
+
+.organizer-no-events {
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  color: #333;
+  text-align: center;
+}
+
+.organizer-buttons {
+  margin-top: 2rem;
+  display: flex;
+  gap: 12px;
+}
+
+.organizer-buttons button {
+  background-color: #5B2C6F;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.organizer-buttons button:hover {
+  background-color: #3F51B5;
+  transform: scale(1.03);
 }

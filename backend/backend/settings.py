@@ -163,5 +163,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # -----------------------------------------------
 # CORS (Cross-Origin Resource Sharing)
 # -----------------------------------------------
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # React
+    "http://127.0.0.1:5173",
+]
 CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins (use cautiously)
 CORS_ALLOW_CREDENTIALS = True  # Allow sending cookies/credentials across origins
+
+# Local overrides (last)
+try:
+    from .local_settings import *
+except ImportError:
+    pass

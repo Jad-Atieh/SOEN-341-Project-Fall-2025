@@ -1,0 +1,83 @@
+.table-container {
+    overflow-x: auto;
+    background-color: #F3F4FF; 
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+thead {
+    background-color: #5B2C6F; 
+    color: white;
+}
+
+.even-row {
+    background-color: #EDE7F6; 
+}
+
+.odd-row {
+    background-color: #F3F4FF; 
+}
+
+tr:hover {
+    background-color: #D1C4E9; 
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+/* Approve button - blue accent */
+.btn.approve {
+    background-color: #3F51B5;
+    color: white;
+}
+
+.btn.approve:hover {
+    background-color: #6573C3;
+    transform: scale(1.05);
+}
+
+/* Reject button - purple */
+.btn.reject {
+    background-color: #5B2C6F;
+    color: white;
+}
+
+.btn.reject:hover {
+    background-color: #7E57C2;
+    transform: scale(1.05);
+}
+
+/* Default button - neutral */
+.btn.default {
+    background-color: #E5E7EB;
+    color: #111827;
+}
+
+.btn.default:hover {
+    background-color: #D1D5DB;
+    transform: scale(1.05);
+}

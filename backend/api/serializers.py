@@ -11,6 +11,7 @@ They serve two main purposes:
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import User, Event, Ticket
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 # Get the custom User model
 User = get_user_model()
@@ -66,10 +67,11 @@ class EventSerializer(serializers.ModelSerializer):
     """
 
     organizer = serializers.StringRelatedField(read_only=True)  # Show organizer name instead of ID
+    approved_by = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Event
         fields = '__all__'
-        read_only_fields = ['organizer', 'created_at']
+        read_only_fields = ['organizer', 'created_at', "approved_by", "approved_at"]
 
 # -------------------------------
 # TICKET SERIALIZER
@@ -80,12 +82,19 @@ class TicketSerializer(serializers.ModelSerializer):
     - User field is read-only (taken from authenticated user).
     """
 
-    user = serializers.StringRelatedField(read_only=True)
 
+    event_title = serializers.CharField(source='event.title', read_only=True)
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    is_valid = serializers.ReadOnlyField()
+    
     class Meta:
         model = Ticket
-        fields = '__all__'
-        read_only_fields = ['user', 'claimed_at']
+        fields = [
+            'id', 'event', 'event_title', 'user', 'user_name', 'user_email',
+            'qr_code', 'status', 'claimed_at', 'used_at', 'is_valid'
+        ]
+        read_only_fields = ('user', 'claimed_at', 'used_at', 'qr_code')
 
 # -------------------------------
 # USER SERIALIZER (For Admin Use)
@@ -101,3 +110,18 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'name', 'email', 'role', 'status', 'is_active']
         read_only_fields = ['is_active']
+
+
+# -------------------------------
+# TOKEN SERIALIZER WITH EXTRA CLAIMS (role and name)
+# -------------------------------
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add extra claims
+        token['role'] = user.role
+        token['name'] = user.name
+
+        return token
