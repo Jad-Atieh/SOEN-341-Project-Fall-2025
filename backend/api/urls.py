@@ -33,6 +33,9 @@ from .views import (
     EventAnalyticsView,
     CheckInTicketView,
     ExportTicketsCSVView,
+    student_dashboard,
+    StudentTicketDetailView,
+    StudentTicketListView,
 )
 
 urlpatterns = [
@@ -97,13 +100,6 @@ urlpatterns = [
     # → Returns analytics for a specific event.
 
     # -------------------------------
-    # TICKET MANAGEMENT
-    # -------------------------------
-    path("tickets/claim/",ClaimTicketView.as_view(),name="claim-ticket"),
-    # Endpoint: POST /api/tickets/claim/
-    # → Allows students to claim tickets for an event.
-
-    # -------------------------------
     # JWT AUTHENTICATION (LOGIN & TOKEN REFRESH)
     # -------------------------------
     path("token/",MyTokenObtainPairView.as_view(),name="get_token"),
@@ -114,6 +110,13 @@ urlpatterns = [
     # Endpoint: POST /api/token/refresh/
     # → Refreshes the JWT access token when it expires.
 
+    # -------------------------------
+    # TICKET MANAGEMENT
+    # -------------------------------
+    path("tickets/claim/",ClaimTicketView.as_view(),name="claim-ticket"),
+    # Endpoint: POST /api/tickets/claim/
+    # → Allows students to claim tickets for an event.
+
     path("tickets/checkin/", CheckInTicketView.as_view(), name="checkin-ticket"),
     # Endpoint: POST /api/tickets/checkin/
     # → Allows an organizer or admin to check in an attendee using the QR code.
@@ -121,4 +124,17 @@ urlpatterns = [
     path("tickets/export/<int:event_id>/", ExportTicketsCSVView.as_view(), name="export-tickets"),
     # Endpoint: GET /api/tickets/export/<event_id>/
     # → Exports all tickets for a specific event as a CSV file.
+
+    path('student/tickets/', StudentTicketListView.as_view(), name='student-tickets-list'),
+    # Endpoint: GET /api/student/tickets/
+    # → Returns all tickets for the authenticated student user with event information and status.
+
+    path('student/tickets/<int:id>/', StudentTicketDetailView.as_view(), name='student-ticket-detail'),
+    # Endpoint: GET /api/student/tickets/<id>/
+    # → Returns individual ticket details for the authenticated student user.
+
+    # -------------------------------
+    # DASHBOARD
+    # -------------------------------
+    path('dashboard/student/', student_dashboard, name='student-dashboard'),
 ]
