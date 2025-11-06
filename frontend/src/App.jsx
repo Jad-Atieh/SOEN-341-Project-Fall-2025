@@ -75,7 +75,6 @@ function Navbar() {
      {isLoggedIn && role === "student" && (
        <>
          <Link to="/student">Student Dashboard</Link> {"  "}
-         <Link to="/events">Events</Link> {"  "}
          <button onClick={handleLogout} className="button-style">Sign Out</button>
        </>
      )}
@@ -84,7 +83,6 @@ function Navbar() {
      {isLoggedIn && role === "organizer" && (
        <>
          <Link to="/organizer">Organizer Dashboard</Link> {"  "}
-         <Link to="/events">Events</Link> {"  "}
          <Link to="/organizer/analytics">Analytics</Link> {"  "}
          <Link to="/organizer/checkin">Check-in</Link> {"  "}
          <Link to="/create-event">Create Event</Link> {"  "}
@@ -96,7 +94,6 @@ function Navbar() {
      {isLoggedIn && role === "admin" && (
        <>
          <Link to="/admin">Admin Dashboard</Link> {"  "}
-         <Link to="/events">Events</Link> {"  "}
          <Link to="/approval">Orgnizer Approval</Link> {"  "}
          <button onClick={handleLogout} className="button-style">Sign Out</button>
        </>

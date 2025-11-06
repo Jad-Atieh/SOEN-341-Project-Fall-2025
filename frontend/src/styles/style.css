@@ -191,19 +191,19 @@ button[disabled] {
 
 .navbar {
   display: flex;
-  gap: 1.5rem; /* Adds spacing between all items */
+  gap: 1.5rem; 
 }
 
 .navbar a,
 .button-style {
-  color: #000; /* Black text */
-  text-decoration: none; /* Remove underline by default */
+  color: #000; 
+  text-decoration: none; 
 }
 
 .navbar a:hover,
 .button-style:hover {
-  color: #333; /* Slightly lighter black on hover */
-  text-decoration: underline; /* Add underline on hover */
+  color: #333; 
+  text-decoration: underline; 
 }
 
 .button-style {
@@ -215,6 +215,7 @@ button[disabled] {
   cursor: pointer;
   border-radius: 0;
   display: inline;
+  margin-left: auto;
 }
 
 /*********************************************************************************************************/
