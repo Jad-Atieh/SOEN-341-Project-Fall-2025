@@ -52,10 +52,13 @@ const OrganizerTable = ({ search }) => {
               <td>{o.orgName}</td>
               <td>{o.email}</td>
               <td>{new Date(o.submittedAt).toLocaleDateString()}</td>
-              <td className="action-buttons">
+              {o.status == 'pending' ? (<td className="action-buttons">
                 <button className="approve" onClick={() => handleAction(o.id, o.email, "approve")}>✔ Approve</button>
                 <button className="reject" onClick={() => handleAction(o.id, o.email, "reject")}>✖ Reject</button>
-              </td>
+              </td>) : (
+                <td>{o.status}</td>
+              )}
+
             </tr>
           )) : (
             <tr><td colSpan="5">No pending organizers.</td></tr>
