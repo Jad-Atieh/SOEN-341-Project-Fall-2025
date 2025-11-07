@@ -94,7 +94,6 @@ function Navbar() {
      {isLoggedIn && role === "admin" && (
        <>
          <Link to="/admin">Admin Dashboard</Link> {"  "}
-         <Link to="/approval">Orgnizer Approval</Link> {"  "}
          <button onClick={handleLogout} className="button-style">Sign Out</button>
        </>
      )}
