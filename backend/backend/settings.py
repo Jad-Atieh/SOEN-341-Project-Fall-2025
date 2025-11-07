@@ -169,3 +169,9 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins (use cautiously)
 CORS_ALLOW_CREDENTIALS = True  # Allow sending cookies/credentials across origins
+
+# Local overrides (last)
+try:
+    from .local_settings import *
+except ImportError:
+    pass

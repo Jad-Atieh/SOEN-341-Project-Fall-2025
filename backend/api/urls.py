@@ -33,6 +33,9 @@ from .views import (
     EventAnalyticsView,
     CheckInTicketView,
     ExportTicketsCSVView,
+    student_dashboard,
+    StudentTicketDetailView,
+    StudentTicketListView,
 )
 
 urlpatterns = [
@@ -56,11 +59,12 @@ urlpatterns = [
     # → Admin can view all users.
 
     path("users/manage/", ManageUserStatusView.as_view(), name="manage-user-status"),
-    # Endpoint: PATCH /api/users/approve/<id>/
-    # → Admin can approve a pending organizer account.
+    # Endpoint: PATCH /api/users/manage/
+    # → Admin can manage a pending organizer account.
+    # status: active, suspended or pending.
     # Example:
     # {
-    #   "email": "jane@example.com",
+    #   "email": "tom@hotmail.com",
     #   "status": "active"
     # }
 
@@ -71,7 +75,7 @@ urlpatterns = [
     # Endpoint:
     # - GET /api/events/ → List all events (with filters)
     # - POST /api/events/ → Create a new event (organizers only)
-
+    
     path("events/<int:pk>/",EventDetailView.as_view(),name="event-detail"),
     # Endpoint:
     # - GET /api/events/<id>/ → Retrieve event details
@@ -84,9 +88,10 @@ urlpatterns = [
     # → Organizer-only endpoint to update their own events
     # → Cannot modify event status (admin handles approval)
 
-    path("events/manage/<int:event_id>/", ManageEventStatusView.as_view(), name="approve-event"),
+    path("events/manage/<int:event_id>/", ManageEventStatusView.as_view(), name="manage-event"),
     # Endpoint:
     # - PATCH /api/events/manage/<event_id>/
+    # status: approved, pending or rejected.
     # Example:
     # {
     #   "status": "approved"
@@ -95,13 +100,6 @@ urlpatterns = [
     path('events/<int:event_id>/analytics/', EventAnalyticsView.as_view(), name='event-analytics'),
     # Endpoint: GET /api/events/<event_id>/analytics/
     # → Returns analytics for a specific event.
-
-    # -------------------------------
-    # TICKET MANAGEMENT
-    # -------------------------------
-    path("tickets/claim/",ClaimTicketView.as_view(),name="claim-ticket"),
-    # Endpoint: POST /api/tickets/claim/
-    # → Allows students to claim tickets for an event.
 
     # -------------------------------
     # JWT AUTHENTICATION (LOGIN & TOKEN REFRESH)
@@ -114,6 +112,13 @@ urlpatterns = [
     # Endpoint: POST /api/token/refresh/
     # → Refreshes the JWT access token when it expires.
 
+    # -------------------------------
+    # TICKET MANAGEMENT
+    # -------------------------------
+    path("tickets/claim/",ClaimTicketView.as_view(),name="claim-ticket"),
+    # Endpoint: POST /api/tickets/claim/
+    # → Allows students to claim tickets for an event.
+
     path("tickets/checkin/", CheckInTicketView.as_view(), name="checkin-ticket"),
     # Endpoint: POST /api/tickets/checkin/
     # → Allows an organizer or admin to check in an attendee using the QR code.
@@ -121,4 +126,17 @@ urlpatterns = [
     path("tickets/export/<int:event_id>/", ExportTicketsCSVView.as_view(), name="export-tickets"),
     # Endpoint: GET /api/tickets/export/<event_id>/
     # → Exports all tickets for a specific event as a CSV file.
+
+    path('student/tickets/', StudentTicketListView.as_view(), name='student-tickets-list'),
+    # Endpoint: GET /api/student/tickets/
+    # → Returns all tickets for the authenticated student user with event information and status.
+
+    path('student/tickets/<int:id>/', StudentTicketDetailView.as_view(), name='student-ticket-detail'),
+    # Endpoint: GET /api/student/tickets/<id>/
+    # → Returns individual ticket details for the authenticated student user.
+
+    # -------------------------------
+    # DASHBOARD
+    # -------------------------------
+    path('dashboard/student/', student_dashboard, name='student-dashboard'),
 ]

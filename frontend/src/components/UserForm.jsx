@@ -15,7 +15,7 @@ import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import "../styles/Forms.css"
 import LoadingIndicator from "./LoadingIndicator";
 
-function Form({ route, method }) {
+function UserForm({ route, method }) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -121,4 +121,4 @@ function Form({ route, method }) {
   );
 }
 
-export default Form;
+export default UserForm;

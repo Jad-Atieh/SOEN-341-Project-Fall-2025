@@ -162,7 +162,7 @@ class Event(models.Model):
 
     # Admin approval system
     is_approved = models.BooleanField(default=False)
-    approval_status = models.CharField(max_length=20, choices=APPROVAL_CHOICES, default="pending")
+    status = models.CharField(max_length=20, choices=APPROVAL_CHOICES, default="pending")
 
     # Audit metadata
     approved_by = models.ForeignKey(
@@ -176,7 +176,7 @@ class Event(models.Model):
 
     def __str__(self):
         """Readable representation of the event."""
-        return f"{self.title} ({self.approval_status})"
+        return f"{self.title} ({self.status})"
 
 # ============================================================
 # AUDIT MODEL
