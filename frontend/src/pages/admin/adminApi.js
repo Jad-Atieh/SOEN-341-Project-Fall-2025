@@ -20,7 +20,7 @@ export const adminApi = {
   },
 
   async approveOrganizer(organizerId, email) {
-    const response = await axios.patch(`http://localhost:8000/api/users/approve/${organizerId}/`, {
+    const response = await axios.patch(`http://localhost:8000/api/users/manage/`, {
       email: email,
       status: "active"
     },
