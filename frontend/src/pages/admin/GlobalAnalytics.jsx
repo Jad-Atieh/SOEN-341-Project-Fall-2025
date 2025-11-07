@@ -4,7 +4,8 @@ import React, { useState } from "react";
 export default function GlobalAnalytics() {
   return (
     <div className="analytics">
-      <div className="stats-grid">
+      <h1>Global Analytics</h1>
+      {/* <div className="stats-grid">
         <div className="stat-card">
           <p>Total Users</p>
           <h2>18,240</h2>
@@ -21,7 +22,7 @@ export default function GlobalAnalytics() {
           <p>Revenue</p>
           <h2>$3,820,000</h2>
         </div>
-      </div>
+      </div> */}
 
       {/* <div className="chart-card">
         <h4>📈 Tickets, Users & Events by Month</h4>
