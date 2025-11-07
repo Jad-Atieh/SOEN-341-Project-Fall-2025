@@ -316,3 +316,7 @@ button[disabled] {
   background-color: #3F51B5;
   transform: scale(1.03);
 }
+
+.organizer-buttons-button.active {
+  background-color: #3F51B5;
+}

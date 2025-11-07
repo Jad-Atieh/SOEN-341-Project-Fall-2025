@@ -14,7 +14,7 @@ const AdminDashboard = () => {
   const [search, setSearch] = useState("");
 
   return (
-    <div className="admin-wrapper">
+    <div className="organizer-dashboard">
       <DashboardHeader />
 
       <Tabs tabs={tabs} active={active} onChange={setActive} />

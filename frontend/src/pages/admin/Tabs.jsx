@@ -2,11 +2,11 @@ import React from "react";
 
 const Tabs = ({ tabs, active, onChange }) => {
   return (
-    <div className="tabs">
+    <div className="organizer-buttons">
       {tabs.map(tab => (
         <button
           key={tab}
-          className={`tab-btn ${active === tab ? "active" : ""}`}
+          className={`organizer-buttons-button ${active === tab ? "active" : ""}`}
           onClick={() => onChange(tab)}
         >
           {tab}
