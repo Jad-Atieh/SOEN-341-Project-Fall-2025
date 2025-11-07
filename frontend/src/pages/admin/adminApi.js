@@ -19,7 +19,7 @@ export const adminApi = {
     return response.data;
   },
 
-  async approveOrganizer(organizerId, email) {
+  async approveOrganizer(email) {
     const response = await axios.patch(`http://localhost:8000/api/users/manage/`, {
       email: email,
       status: "active"
@@ -30,11 +30,11 @@ export const adminApi = {
     return response.data;
   },
 
-  async rejectOrganizer(organizerId) {
-    const response = await axios.post(`${API_URL}/users/approve/${organizerId}/`, {
+  async rejectOrganizer(email) {
+    const response = await axios.patch(`http://localhost:8000/api/users/manage/`, {
       email: email,
       // FIXME: check for the correct status
-      status: "reject"
+      status: "suspended"
     }, {
       headers: getAuthHeaders(),
     });

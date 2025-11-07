@@ -17,9 +17,9 @@ const OrganizerTable = ({ search }) => {
 
   const handleAction = async (id, email, action) => {
     if (action === "approve") {
-      await adminApi.approveOrganizer(id, email);
+      await adminApi.approveOrganizer(email);
     } else {
-      await adminApi.rejectOrganizer(id);
+      await adminApi.rejectOrganizer(email);
     }
     setOrganizers((prev) => prev.filter((o) => o.id !== id));
   };
