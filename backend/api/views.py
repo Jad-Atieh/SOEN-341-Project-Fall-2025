@@ -155,7 +155,7 @@ class EventListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         """Automatically assign the current user as the event organizer."""
-        serializer.save(organizer=self.request.user, approval_status='pending')
+        serializer.save(organizer=self.request.user, status='pending')
 
     def get_queryset(self):
         """Supports filtering by date, category, or organization."""
@@ -164,11 +164,11 @@ class EventListCreateView(generics.ListCreateAPIView):
 
         # 1. Public (not logged in)
         if not user.is_authenticated:
-            queryset = queryset.filter(approval_status='approved')
+            queryset = queryset.filter(status='approved')
 
         # 2. Students: see only approved events
         elif user.role == 'student':
-            queryset = queryset.filter(approval_status='approved')
+            queryset = queryset.filter(status='approved')
 
         # 3. Organizers: see all their own events
         elif user.role == 'organizer':
@@ -294,7 +294,7 @@ class ManageUserStatusView(APIView):
     Behavior:
     - Approve (set to active)
     - Suspend (set to suspended)
-    - Reset (set to pending)
+    - Pending (set to pending)
 
     Lookup Methods:
     - By ID
@@ -359,6 +359,7 @@ class ManageEventStatusView(APIView):
     """
     serializer_class = EventSerializer
     permission_classes = [IsAdmin]
+    #queryset = Event.objects.all()  # Needed for UpdateAPIView
 
     def get_queryset(self):
         return Event.objects.all()
@@ -416,6 +417,9 @@ def analytics_overview(request):
   
     def update(self, request, *args, **kwargs):
         event = self.get_object()
+    def patch(self, request, *args, **kwargs):
+        """Handle PATCH requests to update event approval status."""
+        event_id = kwargs.get("event_id")
         new_status = request.data.get('status')
 
         # Validate status input
@@ -423,14 +427,14 @@ def analytics_overview(request):
             return Response({"error": "Invalid status. Must be 'approved', 'pending', or 'rejected'."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # Retrieve event
+        # Find the event by ID
         try:
             event = Event.objects.get(id=event_id)
         except Event.DoesNotExist:
             return Response({"error": "Event not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # Update approval state
-        event.approval_status = new_status
+        event.status = new_status
         event.is_approved = (new_status == "approved")
         event.approved_by = request.user
         event.approved_at = timezone.now()
@@ -610,7 +614,7 @@ class ExportTicketsCSVView(APIView):
         writer.writerow(['Student', 'Event', 'Status', 'Claimed At', 'Used At'])
         for t in tickets:
             writer.writerow([
-                t.user.username,
+                t.user.name,
                 t.event.title,
                 t.status,
                 t.claimed_at,
