@@ -16,7 +16,7 @@ import OrganizerCheckin from "./pages/OrganizerCheckin";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import OrganizerApproval from "./pages/OrganizerApproval";
 import StudentDashboard from "./pages/StudentDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -94,7 +94,6 @@ function Navbar() {
      {isLoggedIn && role === "admin" && (
        <>
          <Link to="/admin">Admin Dashboard</Link> {"  "}
-         <Link to="/approval">Orgnizer Approval</Link> {"  "}
          <button onClick={handleLogout} className="button-style">Sign Out</button>
        </>
      )}

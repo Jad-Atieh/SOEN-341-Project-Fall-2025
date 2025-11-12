@@ -1,0 +1,223 @@
+.admin-wrapper {
+  padding: 20px;
+  font-family: system-ui;
+  color: #1b1b1b;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.badge {
+  background: #eef2ff;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  border: 1px solid #d2d8fa;
+}
+
+.logout {
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  background: white;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #d8dee9;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.tab-btn.active {
+  background: #0b1220;
+  color: white;
+}
+
+/* Search */
+.search {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #dcdcdc;
+  border-radius: 10px;
+  margin: 14px 0 20px;
+  font-size: 14px;
+}
+
+/* Section title */
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  display: flex;
+  gap: 8px;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 16px;
+}
+
+/* Event Card */
+.event-card {
+  border: 1px solid #e7e7e7;
+  padding: 18px;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.event-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.event-info {
+  display: grid;
+  grid-template-columns: 140px auto;
+  row-gap: 4px;
+  margin-bottom: 14px;
+}
+
+.event-info span {
+  font-size: 13px;
+  color: #6a7684;
+}
+
+.event-info p {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Buttons */
+.card-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.approve {
+  flex: 1;
+  padding: 8px;
+  background: #091428;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.reject {
+  flex: 1;
+  padding: 8px;
+  background: #e92121;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Coming Soon */
+.coming-soon {
+  font-size: 16px;
+  padding: 30px;
+  text-align: center;
+  color: #606060;
+}
+
+.table-wrapper {
+  background: #fff;
+  border: 1px solid #e7e7e7;
+  padding: 18px;
+  border-radius: 14px;
+  overflow-x: auto;
+}
+
+.org-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.org-table th {
+  text-align: left;
+  color: #6a7684;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.org-table td {
+  padding: 14px 6px;
+  font-weight: 500;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.analytics {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  padding: 20px;
+}
+
+.stat-card h2 {
+  margin-top: 4px;
+  font-size: 24px;
+}
+
+.chart-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.chart-img {
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 10px;
+  background: #f8f8f8;
+}
