@@ -28,4 +28,5 @@ EOF
 
 # Remove .pyc files
 __pycache__/
-*.pyc
+*.pycbackend/.venv/
+backend/.env
