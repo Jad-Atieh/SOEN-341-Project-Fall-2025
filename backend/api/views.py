@@ -422,6 +422,8 @@ class OrganizerUpdateEventView(generics.UpdateAPIView):
         return Response({
             "id": event.id,
             "title": event.title,
+            "organizer": event.organizer,
+            "submitted": event.created_at,
             "updated_fields": list(data.keys()),
             "message": "Event updated successfully (status unchanged)."
         }, status=status.HTTP_200_OK)
@@ -553,7 +555,6 @@ class ExportTicketsCSVView(APIView):
 # ------------------------------------
 # STUDENT DASHBOARD API
 # ------------------------------------
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def student_dashboard(request):
