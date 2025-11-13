@@ -20,6 +20,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import OrganizerApproval from "./pages/OrganizerApproval";
 import StudentDashboard from "./pages/StudentDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 
 
 // logout function
@@ -60,11 +61,9 @@ function Navbar() {
  return (
    // navigation bar based on user role and login status
    <nav className="navbar">
-     <Link to="/">Home</Link> {" "}
-
-
      {!isLoggedIn && (
        <>
+         <Link to="/"> Home</Link> {" "}
          <Link to="/login">Login</Link> {"  "}
          <Link to="/signup">Signup</Link> {"  "}
          <Link to="/events">Events</Link> {"  "}
@@ -110,9 +109,9 @@ function App() {
 
 
      <Routes>
-       <Route path="/" element={<Home />} />
-       <Route path="/login" element={<Login />} />
-       <Route path="/signup" element={<Signup />} />
+       <Route path="/" element={ <PublicRoute> <Home /></PublicRoute>} />
+       <Route path="/login" element={ <PublicRoute> <Login /> </PublicRoute>} />
+       <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
        <Route path="/logout" element={<Logout />} />
 
 
@@ -145,6 +144,8 @@ function App() {
        <Route path="/organizer/checkin" element={
          <ProtectedRoute roles={["organizer"]}><OrganizerCheckin /></ProtectedRoute>
        } />
+
+       {/* Shared Routes */}
        <Route path="/create-event" element={
          <ProtectedRoute roles={["organizer", "admin"]}><CreateEvent /></ProtectedRoute>
        } />
