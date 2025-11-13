@@ -297,7 +297,7 @@ class Ticket(models.Model):
     
     def is_valid(self):
         # check if ticket is valid
-        return self.status == 'active' and self.event.is_active
+        return self.status == 'active' and self.event.is_approved
     
     class Meta:
         db_table = 'tickets'

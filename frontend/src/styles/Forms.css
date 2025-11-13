@@ -21,7 +21,8 @@
 
 
 .form-input {
-  width: 100%;
+  width: 100%; 
+  max-width: 350px; 
   padding: 12px 15px;
   margin-bottom: 20px;
   border: 1px solid #ccc;
@@ -30,13 +31,14 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+
 .form-input:focus {
   outline: none;
   border-color: #3F51B5; 
   box-shadow: 0 0 6px rgba(63, 81, 181, 0.4);
 }
 
-/* Submit button */
+
 .form-button {
   width: 100%;
   padding: 12px 15px;
@@ -55,14 +57,14 @@
   transform: scale(1.03);
 }
 
-/* Loading indicator style */
+
 .loading-indicator {
   margin: 10px 0;
   font-size: 14px;
   color: #666;
 }
 
-/* Responsive adjustments */
+
 @media (max-width: 500px) {
   .form-container {
       margin: 40px 20px;

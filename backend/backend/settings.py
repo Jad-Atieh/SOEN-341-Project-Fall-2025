@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY SETTINGS
 # -----------------------------------------------
 SECRET_KEY = 'django-insecure-watgvyhl5_5p#wymz1fuwhyp^a$#+s-1k#-@x6dzyljv3b!v)&'  # ❗Replace with environment variable in production
-DEBUG = True  # ❗Do NOT keep True in production
+DEBUG = True  # Do NOT keep True in production
 ALLOWED_HOSTS = ["*"]  # Allows all hosts; restrict this in production
 
 # -----------------------------------------------
@@ -120,7 +120,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         'NAME': 'soen341',
         'USER': 'root',
-        'PASSWORD': '',  # ❗Use environment variable in production
+        'PASSWORD': '',  # Use environment variable in production
         'HOST': '127.0.0.1',
         'PORT': '3306',
         "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
