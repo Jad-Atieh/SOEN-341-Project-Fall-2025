@@ -1,10 +1,6 @@
 name: Django CI
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+run-name: ${{ github.actor }} is testing out django ci
+on: [push]
 
 jobs:
   build:
