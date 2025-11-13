@@ -255,6 +255,29 @@ button[disabled] {
   text-align: center;
 }
 
+.student-buttons {
+  margin-top: 2rem;
+  display: flex;
+  gap: 12px;
+}
+
+.student-buttons button {
+  background-color: #5B2C6F;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.student-buttons button:hover {
+  background-color: #3F51B5;
+  transform: scale(1.03);
+}
+
+
 /*********************************************************************************************************/
 /****************************      ORGANIZER DASHBOARD       ********************************************/
 /*********************************************************************************************************/
