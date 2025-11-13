@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import api from "../api";
 import Table from "../components/Table";
 import Modal from "../components/Modal";
+import SearchBar from "./admin/SearchBar"; 
 
 function StudentDashboard() {
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEvent, setModalEvent] = useState(null);
@@ -31,15 +33,28 @@ function StudentDashboard() {
     }
   };
 
+  // Combined fetch for initial load
+  const fetchData = async () => {
+    await Promise.all([fetchEvents(), fetchTickets()]);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      await Promise.all([fetchEvents(), fetchTickets()]);
-      setLoading(false);
-    };
-    fetchData();
+    fetchData(); // initial fetch only
   }, []);
 
   const isClaimed = (eventId) => tickets.some((t) => t.event === eventId);
+
+  // Filter events based on search term
+  const filteredEvents = events.filter((e) => {
+    const term = search.toLowerCase();
+    return (
+      e.title.toLowerCase().includes(term) ||
+      (e.location && e.location.toLowerCase().includes(term)) ||
+      (e.category && e.category.toLowerCase().includes(term)) ||
+      (e.organization && e.organization.toLowerCase().includes(term))
+    );
+  });
 
   const columns = [
     { header: "Event Name", accessor: "title" },
@@ -79,7 +94,7 @@ function StudentDashboard() {
 
   if (loading) return <p>Loading events...</p>;
 
-  const tableData = events.map((e) => ({
+  const tableData = filteredEvents.map((e) => ({
     ...e,
     claimed: isClaimed(e.id) ? "Yes" : "No",
   }));
@@ -88,10 +103,15 @@ function StudentDashboard() {
     <div className="student-dashboard">
       <div className="student-header">
         <h1>Welcome to your Student Dashboard!</h1>
-        <p>
-          Here are upcoming events. You can claim a ticket or view details.
-        </p>
+        <p>Here are upcoming events. You can claim a ticket or view details.</p>
       </div>
+
+      
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search by title, location, category, or organization..."
+      />
 
       {tableData.length > 0 ? (
         <Table columns={columns} data={tableData} actions={actions} />
@@ -99,11 +119,6 @@ function StudentDashboard() {
         <div className="student-no-events">No events available.</div>
       )}
 
-      <div className="student-buttons">
-        <button onClick={fetchEvents}>Refresh Events</button>
-      </div>
-
-      {/* Modal for viewing event details */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -153,10 +168,6 @@ function StudentDashboard() {
             <div className="modal-row">
               <dt>Organization:</dt>
               <dd>{modalEvent.organization}</dd>
-            </div>
-            <div className="modal-row">
-              <dt>Status:</dt>
-              <dd>{modalEvent.status}</dd>
             </div>
           </dl>
         )}
