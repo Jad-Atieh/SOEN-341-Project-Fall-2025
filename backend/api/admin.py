@@ -1,16 +1,14 @@
-""" ADMIN.PY
-- Purpose: Make your models manageable through Django’s built-in admin site
-- When you go to /admin, you can view and edit database records visually"""
+"""
+admin.py
+---------
+Purpose:
+    - Registers your models with Django's built-in admin interface.
+    - Allows you to view, add, edit, and delete model data visually at /admin.
+"""
 
 from django.contrib import admin
+from .models import Event, User  # Import the models you want to manage in the admin panel
 
-# Register your models here.
-# backend/api/admin.py
-from django.contrib import admin
-from .models import Event
-
-@admin.register(Event)
-class EventAdmin(admin.ModelAdmin):
-    list_display = ('title', 'location', 'category', 'date', 'created_at')
-    list_filter = ('category', 'location', 'date')
-    search_fields = ('title', 'description')
+# Register models to make them appear in the Django admin dashboard
+admin.site.register(User)   # Allows managing user accounts (students, organizers, admins)
+admin.site.register(Event)  # Allows managing event records

@@ -8,60 +8,70 @@
  * If authentication fails, it redirects the user to the login page.
  */
 
-import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import api from "../api";
 import { REFRESH_TOKEN, ACCESS_TOKEN } from "../constants";
-import { useState, useEffect } from "react";
 
+function ProtectedRoute({ children, roles = [] }) {
+  const navigate = useNavigate();
 
-function ProtectedRoute({ children }) {
-    const [isAuthorized, setIsAuthorized] = useState(null);
+// every time the component mounts, check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem(ACCESS_TOKEN);
 
-    useEffect(() => {
-        auth().catch(() => setIsAuthorized(false))
-    }, [])
+      // If no token, redirect to home page
+      if (!token) {
+        navigate("/");
+        return;
+      }
 
-    const refreshToken = async () => {
-        const refreshToken = localStorage.getItem(REFRESH_TOKEN);
+      // decode the token for role and expiration check
+      
+      let decoded;
+      try {
+        decoded = jwtDecode(token);
+      } catch {
+        navigate("/");
+        return;
+      }
+
+      // expiration check on access token
+      const now = Date.now() / 1000;
+      if (decoded.exp < now) {
+        
+        // try to use the refresh token to get a new access token if access token is expired
         try {
-            const res = await api.post("/api/token/refresh/", {
-                refresh: refreshToken,
-            });
-            if (res.status === 200) {
-                localStorage.setItem(ACCESS_TOKEN, res.data.access)
-                setIsAuthorized(true)
-            } else {
-                setIsAuthorized(false)
-            }
-        } catch (error) {
-            console.log(error);
-            setIsAuthorized(false);
+          const refreshToken = localStorage.getItem(REFRESH_TOKEN);
+          const res = await api.post("/api/token/refresh/", { refresh: refreshToken });
+          localStorage.setItem(ACCESS_TOKEN, res.data.access);
+          decoded = jwtDecode(res.data.access);
+        } catch {
+          navigate("/");
+          return;
         }
+      }
+
+      // role-based access control
+      if (roles.length && !roles.includes(decoded.role)) {
+        switch (decoded.role) {
+          case "student": navigate("/student"); break;
+          case "organizer": navigate("/organizer"); break;
+          case "admin": navigate("/admin"); break;
+          default: navigate("/"); break;
+        }
+        return;
+      }
     };
 
-    const auth = async () => {
-        const token = localStorage.getItem(ACCESS_TOKEN);
-        if (!token) {
-            setIsAuthorized(false);
-            return;
-        }
-        const decoded = jwtDecode(token);
-        const tokenExpiration = decoded.exp;
-        const now = Date.now() / 1000;
+    // invoke the authentication check after mount
+    checkAuth();
+  }, [navigate, roles]);
 
-        if (tokenExpiration < now) {
-            await refreshToken();
-        } else {
-            setIsAuthorized(true);
-        }
-    };
-
-    if (isAuthorized === null) {
-        return <div>Loading...</div>;
-    }
-
-    return isAuthorized ? children : <Navigate to="/login"/>;
+  // avoiding the blank page problem by rendering children only after checks
+  return <>{children}</>;
 }
 
 export default ProtectedRoute;
