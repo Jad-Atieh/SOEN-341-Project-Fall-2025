@@ -22,11 +22,20 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Event, Ticket, AuditLog
 from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer)
 from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin)
+
+from rest_framework.decorators import api_view, permission_classes
+from django.core.exceptions import PermissionDenied
+from datetime import datetime
+
+
+from backend.api import serializers
+
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.http import HttpResponse
 import csv
+
 
 
 # Get custom user model
@@ -210,6 +219,13 @@ class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         """Retrieve events."""
         return Event.objects.all()
+    
+    def perform_update(self, serializer):
+        event = self.get_object()
+        if event.organizer != self.request.user:
+            raise PermissionDenied("You can only edit your own events.")
+        serializer.save()
+    #This function ensures that the organizer can edit and delete events.
 
 # ------------------------------------
 # TICKET CLAIM (STUDENTS ONLY)
@@ -345,6 +361,62 @@ class ManageEventStatusView(APIView):
     permission_classes = [IsAdmin]
     #queryset = Event.objects.all()  # Needed for UpdateAPIView
 
+    def get_queryset(self):
+        return Event.objects.all()
+
+    def perform_update(self, serializer):
+        """Approve an organizer (activate their account)."""
+        serializer.save(status='active', is_active=True)
+
+@api_view(['POST'])
+@permission_classes([IsStudentOrOrganizerOrAdmin])
+def verify_qr(request):
+    """
+    Validate a scanned QR code to ensure it's from a real event.
+    """
+    qr_data = request.data.get("data")
+
+    if not qr_data:
+        return Response({"error": "No QR data provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Extract the event ID from the QR code text
+        event_id = int(qr_data.split("Event ID: ")[1].split(" |")[0])
+        event = Event.objects.get(id=event_id)
+        return Response({
+            "valid": True,
+            "event": event.title,
+            "date": event.date,
+            "location": event.location,
+        })
+    except Exception:
+        return Response({"valid": False, "error": "Invalid QR code."}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['GET'])
+@permission_classes([IsOrganizer])
+def analytics_overview(request):
+    """
+    Returns dashboard statistics for the organizer.
+    Provides summary data for analytics visualization.
+    """
+    user = request.user
+    events = Event.objects.filter(organizer=user)
+
+    total_events = events.count()
+    upcoming_events = events.filter(date__gte=datetime.now()).count()
+    latest_event = events.order_by('-date').first()
+
+    return Response({
+        "organizer": user.username,
+        "total_events": total_events,
+        "upcoming_events": upcoming_events,
+        "latest_event": latest_event.title if latest_event else None,
+        "latest_event_date": latest_event.date if latest_event else None,
+    }, status=status.HTTP_200_OK)
+  
+    def update(self, request, *args, **kwargs):
+        event = self.get_object()
     def patch(self, request, *args, **kwargs):
         """Handle PATCH requests to update event approval status."""
         event_id = kwargs.get("event_id")
