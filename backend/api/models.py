@@ -75,7 +75,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     ROLE_CHOICES = [
         ("student", "Student"),
-        ("teacher", "Teacher"),
+        ("organizer", "Organizer"),
         ("admin", "Admin"),
     ]
 

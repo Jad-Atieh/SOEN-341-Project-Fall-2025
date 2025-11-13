@@ -665,59 +665,6 @@ class StudentTicketDetailView(generics.RetrieveAPIView):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated]
 
-
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-from .models import Task
-from .serializers import TaskSerializer
-from rest_framework import viewsets
-
-class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
-    serializer_class = TaskSerializer
-
-from rest_framework import generics, permissions, viewsets
-from .models import Task, Profile
-from .serializers import UserSerializer, TaskSerializer, ProfileSerializer
-from rest_framework.permissions import IsAuthenticated, AllowAny
-
-
-# Register new users
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [AllowAny]
-
-
-# Profile view (GET and PUT)
-class ProfileView(generics.RetrieveUpdateAPIView):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        return self.request.user.profile
-
-
-# Task management
-class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
-    serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        serializer.save(assigned_to=self.request.user)
-
-
-from rest_framework import generics
-from .models import Event
-from .serializers import EventSerializer
-
-class EventListView(generics.ListAPIView):
-    queryset = Event.objects.all().order_by('date')
-    serializer_class = EventSerializer
     def get_queryset(self):
         # students can only access their own tickets
         return Ticket.objects.filter(user=self.request.user).select_related('event')
