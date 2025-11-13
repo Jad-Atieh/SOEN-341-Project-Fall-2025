@@ -681,3 +681,95 @@ class StudentTicketDetailView(generics.RetrieveAPIView):
             user=self.request.user  # ensure user owns the ticket
         )
         return ticket
+
+# ------------------------------------
+# GLOBAL ANALYTICS (ADMIN DASHBOARD)
+# ------------------------------------
+class GlobalAnalyticsView(APIView):
+    """
+    Provides global analytics for the entire system.
+
+    Accessible by:
+      - Admin users only.
+
+    Returns high-level metrics such as:
+      - Total users by role and status
+      - Event counts by approval status
+      - Ticket statistics
+      - Top events and organizer performance
+    """
+
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        # --- USERS ---
+        total_users = User.objects.count()
+        active_users = User.objects.filter(status='active').count()
+        pending_users = User.objects.filter(status='pending').count()
+        suspended_users = User.objects.filter(status='suspended').count()
+
+        students = User.objects.filter(role='student').count()
+        organizers = User.objects.filter(role='organizer').count()
+        admins = User.objects.filter(role='admin').count()
+
+        # --- EVENTS ---
+        total_events = Event.objects.count()
+        approved_events = Event.objects.filter(status='approved').count()
+        pending_events = Event.objects.filter(status='pending').count()
+        rejected_events = Event.objects.filter(status='rejected').count()
+
+        top_events = (
+            Event.objects.annotate(ticket_count=Count('tickets'))
+            .order_by('-ticket_count')[:5]
+            .values('id', 'title', 'ticket_count', 'category', 'organization')
+        )
+
+        # --- TICKETS ---
+        total_tickets = Ticket.objects.count()
+        active_tickets = Ticket.objects.filter(status='active').count()
+        used_tickets = Ticket.objects.filter(status='used').count()
+        cancelled_tickets = Ticket.objects.filter(status='cancelled').count()
+
+        # --- ORGANIZER PERFORMANCE ---
+        organizer_performance = (
+            User.objects.filter(role='organizer')
+            .annotate(
+                total_events=Count('events'),
+                approved_event_count=Count('events', filter=Q(events__status='approved')),  # ✅ fixed
+                total_tickets=Count('events__tickets'),
+            )
+            .values('id', 'name', 'email', 'total_events', 'approved_event_count', 'total_tickets')
+            .order_by('-approved_event_count')[:5]
+        )
+
+        data = {
+            "users": {
+                "total": total_users,
+                "active": active_users,
+                "pending": pending_users,
+                "suspended": suspended_users,
+                "by_role": {
+                    "students": students,
+                    "organizers": organizers,
+                    "admins": admins,
+                },
+            },
+            "events": {
+                "total": total_events,
+                "approved": approved_events,
+                "pending": pending_events,
+                "rejected": rejected_events,
+                "top_events": list(top_events),
+            },
+            "tickets": {
+                "total": total_tickets,
+                "active": active_tickets,
+                "used": used_tickets,
+                "cancelled": cancelled_tickets,
+            },
+            "organizer_performance": list(organizer_performance),
+            "generated_at": timezone.now(),
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
