@@ -142,6 +142,3 @@ urlpatterns = [
     # -------------------------------
     path('dashboard/student/', student_dashboard, name='student-dashboard'),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

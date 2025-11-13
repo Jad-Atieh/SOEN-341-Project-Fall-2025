@@ -255,6 +255,7 @@ class Ticket(models.Model):
     claimed_at = models.DateTimeField(auto_now_add=True) 
     used_at = models.DateTimeField(null=True, blank=True)
     
+    # QR code generation
     def save(self, *args, **kwargs):
         """Generate QR code when ticket is created"""
         # Only generate QR code for new tickets (when pk is None)
