@@ -18,6 +18,11 @@ Structure:
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+import qrcode
+from io import BytesIO
+from django.core.files import File
+import os
 
 # ============================================================
 # CUSTOM USER MANAGER
@@ -32,7 +37,7 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         """Create and save a regular user with the given email and password."""
         if not email:
-            raise ValueError('The email field must be filled out.')
+            raise ValueError("The email field must be filled out.")
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)  # Securely hash the password before saving
@@ -45,7 +50,13 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('status', 'active')
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        
+        extra_fields.setdefault('is_active', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
         return self.create_user(email, password, **extra_fields)
 
 # ============================================================
@@ -63,15 +74,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     """
 
     ROLE_CHOICES = [
-        ('student', 'Student'),
-        ('organizer', 'Organizer'),
-        ('admin', 'Admin'),
+        ("student", "Student"),
+        ("organizer", "Organizer"),
+        ("admin", "Admin"),
     ]
-    
+
     STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('pending', 'Pending'),
-        ('suspended', 'Suspended'),
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
     ]
 
     # Core fields
@@ -235,7 +246,7 @@ class Ticket(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets') # same as for events
     
     # QR code for ticket validation
-    qr_code = models.CharField(max_length=255, unique=True, help_text="Unique QR code for ticket validation"    )
+    qr_code = models.ImageField(upload_to='tickets/qr_codes/', blank=True, null=True, help_text="QR code for ticket validation")
     
     # status tracking
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
@@ -244,6 +255,31 @@ class Ticket(models.Model):
     claimed_at = models.DateTimeField(auto_now_add=True) 
     used_at = models.DateTimeField(null=True, blank=True)
     
+    # QR code generation
+    def save(self, *args, **kwargs):
+        """Generate QR code when ticket is created"""
+        # Only generate QR code for new tickets (when pk is None)
+        if not self.pk and not self.qr_code:
+            super().save(*args, **kwargs)  # Save first to get ticket ID
+            
+            # Generate QR code data
+            qr_data = f"ticket:{self.id}:user:{self.user.id}:event:{self.event.id}"
+            
+            # Create QR code
+            qr = qrcode.make(qr_data)
+            
+            # Save to buffer
+            buffer = BytesIO()
+            qr.save(buffer, format='PNG')
+            
+            # Create file name
+            file_name = f"ticket_{self.id}_qr.png"
+            
+            # Save to ImageField
+            self.qr_code.save(file_name, File(buffer), save=False)
+        
+        super().save(*args, **kwargs)
+
     def __str__(self):
         """Readable representation of a ticket claim."""
         return f"{self.user.name} → {self.event.title}"
