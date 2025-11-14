@@ -48,7 +48,9 @@ const AdminDashboard = () => {
       )}
 
       {active === "Global Analytics" && (
-        <GlobalAnalytics />
+        <div className="content-block">
+          <GlobalAnalytics />
+        </div>
       )}
     </div>
   );
