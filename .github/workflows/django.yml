@@ -34,6 +34,6 @@ jobs:
           --ds=backend.settings \
           --cov=. \
           --cov-report=xml \
-          --cov-report=term
+          --cov-report=term \
 #        pytest tests.py --doctest-modules --junitxml=/test-results.xml -- cov=com --cov-report=xml --cov-report=html
 
