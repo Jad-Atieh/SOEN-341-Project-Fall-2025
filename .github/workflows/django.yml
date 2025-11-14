@@ -39,8 +39,8 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '${{ matrix.python-version }}'
-    - name: start my sql
-      run: sudo systemctl start mysql.service
+    #- name: start my sql
+      #run: sudo systemctl start mysql.service
     - name: Install Dependencies
       working-directory: backend
       run: |
