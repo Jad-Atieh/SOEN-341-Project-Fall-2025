@@ -1,112 +1,208 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import api from "../api";
-import Table from "../components/Table";
+import "./OrganizerDashboard.css";
+import {
+  fetchOrganizerEvents,
+  fetchOrganizerAnalytics,
+  fetchEventQrData,
+} from "./organizerApi";
+import QRCodeModal from "./QRCodeModal";
 
-function OrganizerDashboard() {
+export default function OrganizerDashboard() {
   const [events, setEvents] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-
-  const fetchEvents = async () => {
-    try {
-      const res = await api.get("/api/events/");
-      setEvents(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [error, setError] = useState("");
+  const [qrValue, setQrValue] = useState("");
+  const [qrEvent, setQrEvent] = useState(null);
+  const [isQrOpen, setIsQrOpen] = useState(false);
 
   useEffect(() => {
-    fetchEvents();
+    async function load() {
+      try {
+        setLoading(true);
+        const [eventsData, analyticsData] = await Promise.all([
+          fetchOrganizerEvents(),
+          fetchOrganizerAnalytics(),
+        ]);
+        setEvents(eventsData);
+        setAnalytics(analyticsData);
+        setError("");
+      } catch (e) {
+        setError("Could not load organizer data.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
   }, []);
 
-  const columns = [
-    { header: "Title", accessor: "title" },
-    { header: "Date", accessor: "date" },
-    { header: "Start Time", accessor: "start_time" },
-    { header: "End Time", accessor: "end_time" },
-    { header: "Location", accessor: "location" },
-    { header: "Capacity", accessor: "capacity" },
-    { header: "Status", accessor: "approval_status" },
-  ];
+  const filteredEvents = events.filter((event) => {
+    if (!search.trim()) return true;
+    const term = search.toLowerCase();
+    return (
+      event.name.toLowerCase().includes(term) ||
+      event.location.toLowerCase().includes(term)
+    );
+  });
 
-  
-  const actions = [
-    {
-      label: "Edit",
-      type: "edit",
-      onClick: (row) => {
-        navigate(`/edit-event/${row.id}`);
-      },
-    },
-    {
-      label: "Delete",
-      type: "delete",
-      onClick: async (row) => {
-        if (window.confirm(`Are you sure you want to delete "${row.title}"?`)) {
-          try {
-            await api.delete(`/api/events/${row.id}/`);
-            fetchEvents(); // Refresh table
-          } catch (err) {
-            console.error(err);
-            alert("Failed to delete event.");
-          }
-        }
-      },
-    },
-  ];
-
-  const handleExportCSV = () => {
+  function handleExportCsv() {
     if (!events.length) return;
-    const header = columns.map((c) => c.header).join(",");
-    const body = events
-      .map((e) => columns.map((c) => `"${String(e[c.accessor] ?? "")}"`).join(","))
-      .join("\n");
-    const csv = header + "\n" + body;
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "events.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
-  if (loading) return <p>Loading events...</p>;
+    const headers = [
+      "Event ID",
+      "Event Name",
+      "Date",
+      "Location",
+      "Tickets Sold",
+      "Revenue",
+    ];
+
+    const rows = events.map((e) => [
+      e.id,
+      e.name,
+      e.date,
+      e.location,
+      e.ticketsSold,
+      e.revenue,
+    ]);
+
+    const csv = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((value) => {
+            if (value == null) return "";
+            const str = String(value);
+            if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+              return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+          })
+          .join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "organizer_events.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  async function handleOpenQr(event) {
+    try {
+      setIsQrOpen(true);
+      setQrEvent(event);
+      const qrData = await fetchEventQrData(event.id);
+      setQrValue(qrData.value || "");
+    } catch (e) {
+      setQrValue("");
+    }
+  }
+
+  function handleCloseQr() {
+    setIsQrOpen(false);
+    setQrEvent(null);
+    setQrValue("");
+  }
 
   return (
     <div className="organizer-dashboard">
-      <div className="organizer-header">
-        <h1>Organizer Dashboard</h1>
-        <p>
-          Manage your events below. You can export the table as CSV, create new events,
-          view analytics, or manage QR check-ins.
-        </p>
-      </div>
+      <header className="organizer-header">
+        <div>
+          <h1 className="organizer-title">Organizer Dashboard</h1>
+          <p className="organizer-subtitle">
+            Manage your events, tickets and analytics in one place.
+          </p>
+        </div>
+        <div className="organizer-actions">
+          <button className="primary-button" onClick={handleExportCsv}>
+            Export tickets CSV
+          </button>
+        </div>
+      </header>
 
-      {events.length > 0 ? (
-        <Table columns={columns} data={events} actions={actions} />
-      ) : (
-        <div className="organizer-no-events">No events available.</div>
+      {analytics && (
+        <section className="analytics-cards">
+          <div className="analytics-card">
+            <span className="analytics-label">Total events</span>
+            <span className="analytics-value">{analytics.totalEvents}</span>
+          </div>
+          <div className="analytics-card">
+            <span className="analytics-label">Tickets sold</span>
+            <span className="analytics-value">{analytics.totalTickets}</span>
+          </div>
+          <div className="analytics-card">
+            <span className="analytics-label">Revenue</span>
+            <span className="analytics-value">
+              ${analytics.totalRevenue.toLocaleString()}
+            </span>
+          </div>
+        </section>
       )}
 
-      <div className="organizer-buttons">
-        <Link to="/create-event">
-          <button>Create Event</button>
-        </Link>
-        <button onClick={handleExportCSV}>Export CSV</button>
-        <Link to="/organizer/analytics">
-          <button>Analytics</button>
-        </Link>
-        <Link to="/organizer/checkin">
-          <button>QR Check-in</button>
-        </Link>
-      </div>
+      <section className="events-section">
+        <div className="section-header">
+          <h2>My events</h2>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search by name or location"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {loading && <p className="helper-text">Loading events...</p>}
+        {error && !loading && <p className="error-text">{error}</p>}
+        {!loading && !events.length && !error && (
+          <p className="helper-text">You do not have any events yet.</p>
+        )}
+
+        {!!filteredEvents.length && (
+          <div className="table-wrapper">
+            <table className="events-table">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Date</th>
+                  <th>Location</th>
+                  <th>Tickets sold</th>
+                  <th>Revenue</th>
+                  <th>QR code</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEvents.map((event) => (
+                  <tr key={event.id}>
+                    <td>{event.name}</td>
+                    <td>{event.date}</td>
+                    <td>{event.location}</td>
+                    <td>{event.ticketsSold}</td>
+                    <td>${event.revenue.toLocaleString()}</td>
+                    <td>
+                      <button
+                        className="secondary-button"
+                        onClick={() => handleOpenQr(event)}
+                      >
+                        View QR
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {isQrOpen && (
+        <QRCodeModal event={qrEvent} value={qrValue} onClose={handleCloseQr} />
+      )}
     </div>
   );
 }
-
-export default OrganizerDashboard;

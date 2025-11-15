@@ -14,7 +14,7 @@ function OrganizerCheckin() {
     const onSuccess = (decodedText) => {
       setCode(decodedText);
       setStatus("Checking...");
-      fetch(`${API_BASE}/api/checkin/`, {
+      fetch(`${API_BASE}/api/tickets/checkin/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -39,7 +39,7 @@ function OrganizerCheckin() {
     try {
       const res = await html5.scanFile(file, true);
       setCode(res);
-      const r = await fetch(`${API_BASE}/api/checkin/`, {
+      const r = await fetch(`${API_BASE}/api/tickets/checkin/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -68,7 +68,7 @@ function OrganizerCheckin() {
           <button onClick={async () => {
             setStatus("Checking...");
             try {
-              const r = await fetch(`${API_BASE}/api/checkin/`, {
+              const r = await fetch(`${API_BASE}/api/tickets/checkin/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
