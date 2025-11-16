@@ -52,7 +52,7 @@ jobs:
       run: |
         python manage.py makemigrations
         python manage.py migrate
-        python manage.py runserver
+        python manage.py runserver --noreload
         python manage.py test
     - name: Test with pytest
       working-directory: backend
