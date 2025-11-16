@@ -36,6 +36,7 @@ from .views import (
     student_dashboard,
     StudentTicketDetailView,
     StudentTicketListView,
+    EventFeedbackView,
 )
 
 urlpatterns = [
@@ -100,6 +101,10 @@ urlpatterns = [
     path('events/<int:event_id>/analytics/', EventAnalyticsView.as_view(), name='event-analytics'),
     # Endpoint: GET /api/events/<event_id>/analytics/
     # → Returns analytics for a specific event.
+
+    path('events/<int:event_id>/feedback/', EventFeedbackView.as_view(), name='event-feedback'),
+    # Endpoint: POST /api/events/<event_id>/feedback/
+    # → Allows attendees to submit feedback for an event.
 
     # -------------------------------
     # JWT AUTHENTICATION (LOGIN & TOKEN REFRESH)

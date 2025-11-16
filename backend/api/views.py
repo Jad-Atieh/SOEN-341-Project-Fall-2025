@@ -12,20 +12,21 @@ Each class below corresponds to a specific API endpoint and defines:
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from rest_framework import generics, permissions, status, exceptions
+from rest_framework import generics, permissions, status, exceptions, authentication
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User, Event, Ticket, AuditLog
-from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer)
+from .models import User, Event, Ticket, AuditLog, EventFeedback
+from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer, EventFeedbackSerializer)
 from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin)
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.http import HttpResponse
+from django.core.exceptions import PermissionDenied
 import csv
 
 
@@ -773,3 +774,22 @@ class GlobalAnalyticsView(APIView):
 
         return Response(data, status=status.HTTP_200_OK)
 
+# ------------------------------------
+# EVENT FEEDBACK API
+# ------------------------------------
+class EventFeedbackView(generics.ListCreateAPIView):
+    serializer_class = EventFeedbackSerializer
+
+    def get_queryset(self):
+        event_id = self.kwargs["event_id"]
+        return EventFeedback.objects.filter(event__id=event_id)
+
+    def perform_create(self, serializer):
+        event_id = self.kwargs["event_id"]
+
+        # Only attendees can submit feedback
+        event = Event.objects.get(id=event_id)
+        if not Ticket.objects.filter(event=event, user=self.request.user).exists():
+            raise PermissionDenied("You must attend the event to submit feedback.")
+
+        serializer.save(event=event, user=self.request.user)

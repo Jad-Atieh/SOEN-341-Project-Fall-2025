@@ -9,6 +9,7 @@ function StudentDashboard() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [rating, setRating] = useState("");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEvent, setModalEvent] = useState(null);
@@ -99,6 +100,24 @@ function StudentDashboard() {
     claimed: isClaimed(e.id) ? "Yes" : "No",
   }));
 
+  const submitRating = async () => {
+    if (!rating) return alert("Please select a rating.");
+  
+    try {
+      await api.post(`/api/events/${modalEvent.id}/rate/`, {
+        rating: parseInt(rating),
+      });
+  
+      alert("Rating submitted!");
+      setRating("");
+      fetchEvents(); // refresh avg rating
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit rating");
+    }
+  };
+  
+
   return (
     <div className="student-dashboard">
       <div className="student-header">
@@ -169,6 +188,35 @@ function StudentDashboard() {
               <dt>Organization:</dt>
               <dd>{modalEvent.organization}</dd>
             </div>
+            <div className="modal-row">
+                <dt>Average Rating:</dt>
+                <dd>{modalEvent.avg_rating ? modalEvent.avg_rating.toFixed(1) : "No ratings yet"}</dd>
+              </div>
+
+              {/* Allow student to rate ONLY if they claimed the ticket */}
+              {isClaimed(modalEvent.id) && (
+                <div className="modal-row">
+                  <dt>Your Rating:</dt>
+                  <dd>
+                    <select
+                      value={rating}
+                      onChange={(e) => setRating(e.target.value)}
+                    >
+                      <option value="">Select</option>
+                      <option value="1">1 ⭐</option>
+                      <option value="2">2 ⭐</option>
+                      <option value="3">3 ⭐</option>
+                      <option value="4">4 ⭐</option>
+                      <option value="5">5 ⭐</option>
+                    </select>
+
+                    <button onClick={submitRating} className="btn primary" style={{ marginLeft: "10px" }}>
+                      Submit Rating
+                    </button>
+                  </dd>
+                </div>
+              )}
+
           </dl>
         )}
       </Modal>

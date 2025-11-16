@@ -10,7 +10,7 @@ They serve two main purposes:
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import User, Event, Ticket
+from .models import User, Event, Ticket, EventFeedback
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 # Get the custom User model
@@ -68,10 +68,14 @@ class EventSerializer(serializers.ModelSerializer):
 
     organizer = serializers.StringRelatedField(read_only=True)  # Show organizer name instead of ID
     approved_by = serializers.StringRelatedField(read_only=True)
+    average_rating = serializers.FloatField(read_only=True) # average rating of the event
     class Meta:
         model = Event
         fields = '__all__'
-        read_only_fields = ['organizer', 'created_at', "approved_by", "approved_at"]
+        read_only_fields = ['organizer', 'created_at', "approved_by", "approved_at", "average_rating"]
+
+    def get_average_rating(self, obj):
+        return obj.average_rating()
 
 # -------------------------------
 # TICKET SERIALIZER
@@ -125,3 +129,15 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['name'] = user.name
 
         return token
+
+
+# -------------------------------
+# EVENT FEEDBACK SERIALIZER
+# -------------------------------
+class EventFeedbackSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = EventFeedback
+        fields = ["id", "event", "user", "rating", "comment", "created_at"]
+        read_only_fields = ["user", "created_at"]
