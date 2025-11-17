@@ -22,13 +22,13 @@ function OrganizerCheckin() {
       }).then(r => setStatus(r.ok ? "Success" : "Error"))
         .catch(() => setStatus("Success"));
     };
-    const onFail = () => {};
+    const onFail = () => { };
 
     const scanner = new Html5QrcodeScanner(id, { fps: 8, qrbox: 250 }, false);
     scanner.render(onSuccess, onFail);
     scannerRef.current = scanner;
 
-    return () => { try { scanner.clear(); } catch {} };
+    return () => { try { scanner.clear(); } catch { /* empty */ } };
   }, []);
 
   const scanImageFile = async (file) => {
@@ -49,8 +49,8 @@ function OrganizerCheckin() {
     } catch {
       setStatus("Error");
     } finally {
-      try { await html5.stop(); } catch {}
-      try { await html5.clear(); } catch {}
+      try { await html5.stop(); } catch { /* empty */ }
+      try { await html5.clear(); } catch { /* empty */ }
     }
   };
 
