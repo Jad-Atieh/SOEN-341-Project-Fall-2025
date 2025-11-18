@@ -19,6 +19,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 import qrcode
 from io import BytesIO
 from django.core.files import File
@@ -255,12 +256,23 @@ class Ticket(models.Model):
     claimed_at = models.DateTimeField(auto_now_add=True) 
     used_at = models.DateTimeField(null=True, blank=True)
     
-    # QR code generation
+    # QR code generation and capacity management
     def save(self, *args, **kwargs):
-        """Generate QR code when ticket is created"""
-        # Only generate QR code for new tickets (when pk is None)
-        if not self.pk and not self.qr_code:
-            super().save(*args, **kwargs)  # Save first to get ticket ID
+        """Generate QR code when ticket is created and update event capacity"""
+        is_new = not self.pk  # Check if this is a new ticket (not updating existing)
+        
+        if is_new:
+            # Decrease event capacity for new tickets
+            if self.event.capacity > 0:
+                self.event.capacity -= 1
+                self.event.save()
+            else:
+                raise ValidationError("Event is already at full capacity.")
+        
+        # Generate QR code for new tickets
+        if is_new and not self.qr_code:
+            # First save to get ticket ID
+            super().save(*args, **kwargs)
             
             # Generate QR code data
             qr_data = f"ticket:{self.id}:user:{self.user.id}:event:{self.event.id}"
@@ -280,23 +292,36 @@ class Ticket(models.Model):
         
         super().save(*args, **kwargs)
 
+    def delete(self, *args, **kwargs):
+        """Increase event capacity when ticket is deleted/cancelled"""
+        # Increase capacity when ticket is deleted (cancellation)
+        if self.status == 'active':
+            self.event.capacity += 1
+            self.event.save()
+        
+        super().delete(*args, **kwargs)
+    
+    def mark_as_cancelled(self):
+        """Mark ticket as cancelled and increase event capacity"""
+        if self.status == 'active':
+            self.event.capacity += 1  # Free up the spot
+            self.event.save()
+        
+        self.status = 'cancelled'
+        self.save()
+
     def __str__(self):
         """Readable representation of a ticket claim."""
         return f"{self.user.name} → {self.event.title}"
     
     def mark_as_used(self):
-        # mark ticket as used and set used_at timestamp
+        """Mark ticket as used and set used_at timestamp"""
         self.status = 'used'
         self.used_at = timezone.now()
         self.save()
     
-    def mark_as_cancelled(self):
-        # mark ticket as cancelled
-        self.status = 'cancelled'
-        self.save()
-    
     def is_valid(self):
-        # check if ticket is valid
+        """Check if ticket is valid"""
         return self.status == 'active' and self.event.is_approved
     
     class Meta:
