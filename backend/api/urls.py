@@ -38,6 +38,7 @@ from .views import (
     StudentTicketListView,
 )
 
+
 urlpatterns = [
     # -------------------------------
     # USER AUTHENTICATION & REGISTRATION
