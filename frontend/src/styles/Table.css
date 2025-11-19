@@ -1,16 +1,16 @@
 .table-container {
     overflow-x: auto;
-    background-color: #F3F4FF; /* Match student dashboard background */
+    background-color: #F3F4FF;
     padding: 2rem;
-    border-radius: 15px; /* rounded corners like event cards */
-    box-shadow: 0 6px 15px rgba(0,0,0,0.08); /* match card shadow */
+    border-radius: 15px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
     font-family: 'Poppins', sans-serif;
 }
 
 .table {
     width: 100%;
-    border-collapse: separate; /* smoother separation like cards */
-    border-spacing: 0 0.5rem; /* spacing between rows */
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
     table-layout: fixed;
 }
 
@@ -22,7 +22,7 @@ th, td {
 }
 
 thead th {
-    background-color: #5B2C6F; /* darker purple header like dashboard */
+    background-color: #5B2C6F;
     color: white;
     font-weight: 600;
     text-transform: uppercase;
@@ -45,21 +45,26 @@ tbody tr:hover {
 
 .actions {
     display: flex;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    justify-content: flex-start;
 }
 
-.btn {
-    padding: 0.5rem 1rem;
+.actions .btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    min-width: 70px;
+    flex: 1 1 auto;
+    text-align: center;
     border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
     cursor: pointer;
     border: none;
-    transition: all 0.2s ease-in-out;
     font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
 }
 
-/* Approve button - blue accent */
 .btn.approve {
     background-color: #3F51B5;
     color: white;
@@ -70,7 +75,6 @@ tbody tr:hover {
     transform: scale(1.03);
 }
 
-/* Reject button - purple */
 .btn.reject {
     background-color: #5B2C6F;
     color: white;
@@ -81,7 +85,6 @@ tbody tr:hover {
     transform: scale(1.03);
 }
 
-/* Default button - neutral */
 .btn.default {
     background-color: #E5E7EB;
     color: #111827;
@@ -92,7 +95,12 @@ tbody tr:hover {
     transform: scale(1.03);
 }
 
-/* Responsive for smaller screens */
+tbody td {
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 @media (max-width: 768px) {
     .table-container {
         padding: 1rem;

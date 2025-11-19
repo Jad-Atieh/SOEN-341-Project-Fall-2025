@@ -52,6 +52,7 @@ function OrganizerDashboard() {
     { header: "End Time", accessor: "end_time" },
     { header: "Location", accessor: "location" },
     { header: "Capacity", accessor: "capacity" },
+    { header: "Ticket Type", accessor: "ticket_type" }, // added ticket type
     { header: "Status", accessor: "approval_status" },
   ];
 
@@ -76,25 +77,27 @@ function OrganizerDashboard() {
         }
       },
     },
+    {
+      label: "Attendees",
+      type: "export",
+      onClick: async (row) => {
+        try {
+          const res = await api.get(`/api/tickets/export/${row.id}/`, {
+            responseType: "blob",
+          });
+          const url = window.URL.createObjectURL(new Blob([res.data]));
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${row.title}-attendees.csv`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        } catch (err) {
+          console.error(err);
+          alert("Failed to export attendees.");
+        }
+      },
+    },
   ];
-
-  const handleExportCSV = () => {
-    if (!events.length) return;
-    const header = columns.map((c) => c.header).join(",");
-    const body = filteredEvents
-      .map((e) =>
-        columns.map((c) => `"${String(e[c.accessor] ?? "")}"`).join(",")
-      )
-      .join("\n");
-    const csv = header + "\n" + body;
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "events.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   if (loading) return <p>Loading events...</p>;
 
@@ -103,14 +106,13 @@ function OrganizerDashboard() {
       <div className="organizer-header">
         <h1>Organizer Dashboard</h1>
         <p>
-          Manage your events below. Export CSV, create new events, view analytics, or manage QR check-ins
+          Manage your events below
         </p>
       </div>
 
-      {/* Buttons */}
+      {/* Top Buttons */}
       <div className="organizer-buttons">
         <Link to="/create-event"><button>Create Event</button></Link>
-        <button onClick={handleExportCSV}>Export CSV</button>
         <Link to="/organizer/analytics"><button>Analytics</button></Link>
         <Link to="/organizer/checkin"><button>QR Check-in</button></Link>
       </div>
@@ -120,11 +122,11 @@ function OrganizerDashboard() {
         <input
           type="text"
           placeholder="Search events..."
-          className="tickets-search-input" 
+          className="tickets-search-input"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <div className="filter-container"> 
+        <div className="filter-container">
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -136,8 +138,13 @@ function OrganizerDashboard() {
         </div>
       </div>
 
+      {/* Events Table */}
       {filteredEvents.length > 0 ? (
-        <Table columns={columns} data={filteredEvents} actions={actions} />
+        <Table
+          columns={columns}
+          data={filteredEvents}
+          actions={actions} 
+        />
       ) : (
         <div className="organizer-no-events">No events match your search/filter.</div>
       )}

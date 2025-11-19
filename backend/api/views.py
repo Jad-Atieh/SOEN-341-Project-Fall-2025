@@ -21,7 +21,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Event, Ticket, AuditLog
 from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer)
-from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin)
+from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin, IsOrganizerOrAdmin)
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -533,7 +533,7 @@ class CheckInTicketView(APIView):
 # Export Tickets as CSV
 # ------------------------------------
 class ExportTicketsCSVView(APIView):
-    permission_classes = [IsAdminUser]  # only admin/staff
+    permission_classes = [IsOrganizerOrAdmin]  # only admin or organizer
 
     def get(self, request, event_id):
         tickets = Ticket.objects.filter(event_id=event_id).select_related('user', 'event')
