@@ -695,3 +695,71 @@
     flex-direction: column;
   }
 }
+
+/*********************************************************************************************************/
+/************************************     QR - CHECK IN       ********************************************/
+/*********************************************************************************************************/
+
+.organizer-checkin-card {
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+.organizer-checkin-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.organizer-checkin-card input[type="file"] {
+  padding: 3rem;          
+  border: 2px dashed #5B2C6F;
+  border-radius: 12px;     
+  width: 83%;              
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+}
+
+.organizer-checkin-card button {
+  background-color: #5B2C6F;
+  color: white;
+  border: none;
+  padding: 1rem 1.5rem;   
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1.1rem;       
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease-in-out;
+}
+
+.organizer-checkin-card button:hover:not(:disabled) {
+  background-color: #3F51B5;
+  transform: scale(1.03);
+}
+
+.organizer-checkin-card button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.organizer-checkin-message {
+  margin-top: 1rem;
+  font-weight: 500;
+  font-size: 1rem;         
+}
+
+.organizer-checkin-message.success {
+  color: green;
+}
+
+.organizer-checkin-message.error {
+  color: #d32f2f;
+}
