@@ -131,13 +131,15 @@
   margin-left: auto;
  }
  
- /*********************************************************************************************************/
-/**********************************       STUDENT DASHBOARD        ***************************************/
+/*********************************************************************************************************/
+/**********************************       STUDENT PAGES        *******************************************/
 /*********************************************************************************************************/
 
-.student-dashboard {
+/* Common styles for both Student Dashboard and Student Tickets */
+.student-dashboard,
+.student-tickets-page {
   min-height: 100vh;
-  background: #F3F4FF; 
+  background: #F3F4FF;
   padding: 2rem;
   display: flex;
   flex-direction: column;
@@ -151,39 +153,91 @@
 
 .student-header h1 {
   font-size: 2.5rem;
-  color: #5B2C6F; 
+  color: #5B2C6F;
   margin-bottom: 0.5rem;
   letter-spacing: 1px;
 }
 
 .student-header p {
   font-size: 1.1rem;
-  color: #333; 
+  color: #333;
   max-width: 600px;
   margin: auto;
   margin-bottom: 1rem;
 }
 
+.page-navigation {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.nav-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.nav-button.active {
+  background-color: #3F51B5;
+  color: white;
+}
+
+.nav-button.inactive {
+  background-color: #5B2C6F;
+  color: white;
+}
+
+.nav-button:hover {
+  transform: scale(1.05);
+}
 .student-no-events,
 .student-loading {
   margin-top: 3rem;
   font-size: 1.2rem;
   text-align: center;
-  color: #333; 
+  color: #333;
 }
-
 
 .search-filter-container {
   width: 100%;
   max-width: 1200px;
   margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
 }
 
+.tickets-search-input {
+  flex: 1;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: white;
+  color: #333;
+  transition: all 0.2s ease-in-out;
+}
+
+.tickets-search-input:focus {
+  outline: none;
+  border-color: #5B2C6F;
+  box-shadow: 0 0 8px rgba(91,44,111,0.4);
+}
 
 .filter-container {
-  width: 100%;
-  max-width: 300px;
-  margin-bottom: 2rem;
+  width: 200px;
+  margin-bottom: 0;
 }
 
 .filter-container select {
@@ -217,7 +271,25 @@
   box-shadow: 0 0 8px rgba(91,44,111,0.4);
 }
 
-/* Events grid */
+
+@media (max-width: 768px) {
+  .search-filter-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .filter-container {
+    width: 100%;
+  }
+  .tickets-search-input {
+    width: 100%;
+  }
+}
+
+/*********************************************************************************************************/
+/*******************************      DASHBOARD CARDS ONLY        ***************************************/
+/*********************************************************************************************************/
+
+
 .events-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
@@ -245,7 +317,7 @@
 }
 
 .event-card-header h3 {
-  color: #5B2C6F; 
+  color: #5B2C6F;
   font-size: 1.5rem;
   font-family: 'Poppins', sans-serif;
   margin: 0;
@@ -267,14 +339,14 @@
 
 .detail-label {
   font-weight: 600;
-  color: #5B2C6F; 
+  color: #5B2C6F;
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .detail-value {
-  color: #333; 
+  color: #333;
   font-size: 1rem;
   text-align: right;
   flex: 1;
@@ -289,7 +361,7 @@
 
 .claim-btn, .details-btn {
   flex: 1;
-  background-color: #5B2C6F; 
+  background-color: #5B2C6F;
   color: white;
   border: none;
   padding: 0.7rem 1rem;
@@ -301,7 +373,7 @@
 }
 
 .claim-btn:hover:not(:disabled), .details-btn:hover {
-  background-color: #3F51B5; 
+  background-color: #3F51B5;
   transform: scale(1.03);
 }
 
@@ -311,7 +383,7 @@
   transform: none;
 }
 
-/* Responsive adjustments */
+
 @media (max-width: 768px) {
   .events-grid {
     grid-template-columns: 1fr;
@@ -327,8 +399,71 @@
     text-align: left;
     margin-left: 0;
   }
-  .filter-container {
-    max-width: 100%;
+}
+
+/*********************************************************************************************************/
+/********************************      TICKET CARDS ONLY        *****************************************/
+/*********************************************************************************************************/
+
+
+.tickets-container {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ticket-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ticket-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+}
+
+.ticket-info {
+  flex: 1;
+}
+
+.ticket-info h3 {
+  font-size: 1.5rem;
+  color: #5B2C6F;
+  margin: 0 0 0.5rem 0;
+}
+
+.ticket-info p {
+  margin: 0.2rem 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.ticket-qr img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+}
+
+
+@media (max-width: 768px) {
+  .ticket-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ticket-qr img {
+    margin-top: 1rem;
+    width: 120px;
+    height: 120px;
   }
 }
 

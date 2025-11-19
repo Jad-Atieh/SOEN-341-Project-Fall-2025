@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
-import SearchBar from "./admin/SearchBar";
 import Modal from "../components/Modal";
 import "../styles/PageStyle.css";
+import { Link } from "react-router-dom"; 
 
 function StudentDashboard() {
   const [events, setEvents] = useState([]);
@@ -80,21 +80,33 @@ function StudentDashboard() {
         <p>Browse events, claim tickets, and view details.</p>
       </div>
 
-      {/* Search and filter */}
-      <div className="search-filter-container">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Search by title, location, category, or organization..."
-        />
+      {/* Navigation Buttons */}
+      <div className="page-navigation">
+        <Link to="/student" className="nav-button active">
+          All Events
+        </Link>
+        <Link to="/student/tickets" className="nav-button inactive">
+          My Tickets
+        </Link>
       </div>
-      
-      <div className="filter-container">
-      <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-          <option value="date">Sort by Date</option>
-          <option value="location">Sort by Location</option>
-          <option value="category">Sort by Category</option>
-       </select>
+
+      {/* Search and filter - using SAME structure as tickets page */}
+      <div className="search-filter-container">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by title, location, category, or organization..."
+          className="tickets-search-input"
+        />
+
+        <div className="filter-container">
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="date">Sort by Date</option>
+            <option value="location">Sort by Location</option>
+            <option value="category">Sort by Category</option>
+          </select>
+        </div>
       </div>
 
       {/* Events grid */}
