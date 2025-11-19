@@ -99,23 +99,46 @@ function StudentTickets() {
         ) : (
           filteredTickets.map((ticket) => (
             <div key={ticket.id} className="ticket-card">
-              <div className="ticket-info">
-                <h3>{ticket.event?.title || "Untitled Event"}</h3>
-                <p><strong>Date:</strong> {ticket.event?.date || "No date"}</p>
-                <p><strong>Time:</strong> {ticket.event?.start_time || "No time"}</p>
-                <p><strong>Location:</strong> {ticket.event?.location || "N/A"}</p>
-                <p><strong>Status:</strong> {ticket.status}</p>
-                <p><strong>Claimed:</strong> {ticket.claimed_at || "None"}</p>
-                <p><strong>Used:</strong> {ticket.used_at || "None"}</p>
-              </div>
+  <div className="ticket-info">
+    <div className="ticket-card-header">
+      <h3>{ticket.event?.title || "Untitled Event"}</h3>
+    </div>
 
-              <div className="ticket-qr">
-                <img 
-                  src={ticket.qr_code} 
-                  alt="QR Code" 
-                />
-              </div>
-            </div>
+    <div className="ticket-details-grid">
+      <div className="ticket-detail-group">
+        <span className="ticket-detail-label">Date</span>
+        <span className="ticket-detail-value">{ticket.event?.date || "No date"}</span>
+      </div>
+      <div className="ticket-detail-group">
+        <span className="ticket-detail-label">Time</span>
+        <span className="ticket-detail-value">{ticket.event?.start_time || "No time"}</span>
+      </div>
+      <div className="ticket-detail-group">
+        <span className="ticket-detail-label">Location</span>
+        <span className="ticket-detail-value">{ticket.event?.location || "N/A"}</span>
+      </div>
+      <div className="ticket-detail-group">
+        <span className="ticket-detail-label">Status</span>
+        <span className="ticket-detail-value">{ticket.status}</span>
+      </div>
+      <div className="ticket-detail-group">
+        <span className="ticket-detail-label">Claimed</span>
+        <span className="ticket-detail-value">{ticket.claimed_at || "None"}</span>
+      </div>
+      <div className="ticket-detail-group">
+        <span className="ticket-detail-label">Used</span>
+        <span className="ticket-detail-value">{ticket.used_at || "None"}</span>
+      </div>
+    </div>
+  </div>
+
+  <div className="ticket-qr">
+    <img 
+      src={ticket.qr_code} 
+      alt="QR Code" 
+    />
+  </div>
+</div>
           ))
         )}
       </div>
