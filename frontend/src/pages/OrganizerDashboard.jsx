@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api";
 import Table from "../components/Table";
+import "../styles/PageStyle.css";
+
 
 function OrganizerDashboard() {
   const [events, setEvents] = useState([]);
