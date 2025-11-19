@@ -142,9 +142,6 @@ urlpatterns = [
     # Endpoint: GET /api/dashboard/student/
     path('dashboard/student/', student_dashboard, name='student-dashboard'),
 
-    # -------------------------------
-    # GLOBAL ANALYTICS
-    # -------------------------------
     # Endpoint: GET /api/analytics/global/
     path("analytics/global/", views.GlobalAnalyticsView.as_view(), name="global-analytics"),
 
