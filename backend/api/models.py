@@ -259,7 +259,7 @@ class Ticket(models.Model):
     # QR code generation and capacity management
     def save(self, *args, **kwargs):
         """Generate QR code when ticket is created and update event capacity"""
-        is_new = not self.pk  # Check if this is a new ticket (not updating existing)
+        is_new = not self.pk  # Check if this is a new ticket
         
         if is_new:
             # Decrease event capacity for new tickets
@@ -269,11 +269,11 @@ class Ticket(models.Model):
             else:
                 raise ValidationError("Event is already at full capacity.")
         
-        # Generate QR code for new tickets
+        # Save the ticket first (this creates the ID)
+        super().save(*args, **kwargs)
+        
+        # Generate QR code for new tickets after saving
         if is_new and not self.qr_code:
-            # First save to get ticket ID
-            super().save(*args, **kwargs)
-            
             # Generate QR code data
             qr_data = f"ticket:{self.id}:user:{self.user.id}:event:{self.event.id}"
             
@@ -289,8 +289,9 @@ class Ticket(models.Model):
             
             # Save to ImageField
             self.qr_code.save(file_name, File(buffer), save=False)
-        
-        super().save(*args, **kwargs)
+            
+            # Save again to store the QR code
+            super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         """Increase event capacity when ticket is deleted/cancelled"""
