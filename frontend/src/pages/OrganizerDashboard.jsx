@@ -4,13 +4,14 @@ import api from "../api";
 import Table from "../components/Table";
 import "../styles/PageStyle.css";
 
-
 function OrganizerDashboard() {
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const navigate = useNavigate();
 
-  // Fetch events from backend and map status
   const fetchEvents = async () => {
     try {
       const res = await api.get("/api/events/");
@@ -19,6 +20,7 @@ function OrganizerDashboard() {
         approval_status: e.is_approved ? "Approved" : "Pending",
       }));
       setEvents(mappedEvents);
+      setFilteredEvents(mappedEvents);
     } catch (err) {
       console.error(err);
     } finally {
@@ -30,7 +32,19 @@ function OrganizerDashboard() {
     fetchEvents();
   }, []);
 
-  // Table columns
+  useEffect(() => {
+    let filtered = events;
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((e) => e.approval_status === filterStatus);
+    }
+    if (searchTerm) {
+      filtered = filtered.filter((e) =>
+        e.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    setFilteredEvents(filtered);
+  }, [searchTerm, filterStatus, events]);
+
   const columns = [
     { header: "Title", accessor: "title" },
     { header: "Date", accessor: "date" },
@@ -38,10 +52,9 @@ function OrganizerDashboard() {
     { header: "End Time", accessor: "end_time" },
     { header: "Location", accessor: "location" },
     { header: "Capacity", accessor: "capacity" },
-    { header: "Status", accessor: "approval_status" }, // shows Approved or Pending
+    { header: "Status", accessor: "approval_status" },
   ];
 
-  // Table actions
   const actions = [
     {
       label: "Edit",
@@ -55,7 +68,7 @@ function OrganizerDashboard() {
         if (window.confirm(`Are you sure you want to delete "${row.title}"?`)) {
           try {
             await api.delete(`/api/events/${row.id}/`);
-            fetchEvents(); 
+            fetchEvents();
           } catch (err) {
             console.error(err);
             alert("Failed to delete event.");
@@ -65,15 +78,12 @@ function OrganizerDashboard() {
     },
   ];
 
-  // CSV export
   const handleExportCSV = () => {
     if (!events.length) return;
     const header = columns.map((c) => c.header).join(",");
-    const body = events
+    const body = filteredEvents
       .map((e) =>
-        columns
-          .map((c) => `"${String(e[c.accessor] ?? "")}"`)
-          .join(",")
+        columns.map((c) => `"${String(e[c.accessor] ?? "")}"`).join(",")
       )
       .join("\n");
     const csv = header + "\n" + body;
@@ -93,29 +103,44 @@ function OrganizerDashboard() {
       <div className="organizer-header">
         <h1>Organizer Dashboard</h1>
         <p>
-          Manage your events below. You can export the table as CSV, create new
-          events, view analytics, or manage QR check-ins.
+          Manage your events below. Export CSV, create new events, view analytics, or manage QR check-ins
         </p>
       </div>
 
-      {events.length > 0 ? (
-        <Table columns={columns} data={events} actions={actions} />
-      ) : (
-        <div className="organizer-no-events">No events available.</div>
-      )}
-
+      {/* Buttons */}
       <div className="organizer-buttons">
-        <Link to="/create-event">
-          <button>Create Event</button>
-        </Link>
+        <Link to="/create-event"><button>Create Event</button></Link>
         <button onClick={handleExportCSV}>Export CSV</button>
-        <Link to="/organizer/analytics">
-          <button>Analytics</button>
-        </Link>
-        <Link to="/organizer/checkin">
-          <button>QR Check-in</button>
-        </Link>
+        <Link to="/organizer/analytics"><button>Analytics</button></Link>
+        <Link to="/organizer/checkin"><button>QR Check-in</button></Link>
       </div>
+
+      {/* Search + Filter */}
+      <div className="search-filter-container">
+        <input
+          type="text"
+          placeholder="Search events..."
+          className="tickets-search-input" 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <div className="filter-container"> 
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">All Statuses</option>
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+          </select>
+        </div>
+      </div>
+
+      {filteredEvents.length > 0 ? (
+        <Table columns={columns} data={filteredEvents} actions={actions} />
+      ) : (
+        <div className="organizer-no-events">No events match your search/filter.</div>
+      )}
     </div>
   );
 }
