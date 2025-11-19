@@ -269,29 +269,39 @@ class Ticket(models.Model):
             else:
                 raise ValidationError("Event is already at full capacity.")
         
-        # Save the ticket first (this creates the ID)
-        super().save(*args, **kwargs)
-        
-        # Generate QR code for new tickets after saving
+        # Generate QR code for new tickets BEFORE first save
         if is_new and not self.qr_code:
-            # Generate QR code data
-            qr_data = f"ticket:{self.id}:user:{self.user.id}:event:{self.event.id}"
+            # We need to save first to get an ID, but we can't because of unique constraint
+            # Solution: Temporarily set a unique QR code name
+            import uuid
+            temp_filename = f"temp_{uuid.uuid4().hex}.png"
             
-            # Create QR code
+            # Create temporary QR data (will be updated after save)
+            qr_data = f"ticket:temp:user:{self.user.id}:event:{self.event.id}"
             qr = qrcode.make(qr_data)
-            
-            # Save to buffer
             buffer = BytesIO()
             qr.save(buffer, format='PNG')
             
-            # Create file name
-            file_name = f"ticket_{self.id}_qr.png"
-            
-            # Save to ImageField
-            self.qr_code.save(file_name, File(buffer), save=False)
-            
-            # Save again to store the QR code
-            super().save(*args, **kwargs)
+            # Save with temporary QR code first
+            self.qr_code.save(temp_filename, File(buffer), save=False)
+        
+        # First save - creates the ticket with temporary QR
+        super().save(*args, **kwargs)
+    
+    # Update QR code with actual ticket ID after save
+    if is_new:
+        # Generate final QR code with actual ticket ID
+        qr_data = f"ticket:{self.id}:user:{self.user.id}:event:{self.event.id}"
+        qr = qrcode.make(qr_data)
+        buffer = BytesIO()
+        qr.save(buffer, format='PNG')
+        file_name = f"ticket_{self.id}_qr.png"
+        
+        # Save final QR code
+        self.qr_code.save(file_name, File(buffer), save=False)
+        
+        # Final save with correct QR code
+        super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         """Increase event capacity when ticket is deleted/cancelled"""
