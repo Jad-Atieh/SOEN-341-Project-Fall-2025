@@ -29,10 +29,8 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.http import HttpResponse
 import csv
-import cv2
-import numpy as np
 import re
-from rest_framework.parsers import MultiPartParser, JSONParser
+from rest_framework.parsers import JSONParser
 
 
 # Get custom user model

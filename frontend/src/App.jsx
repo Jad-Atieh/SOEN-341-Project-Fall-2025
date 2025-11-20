@@ -6,7 +6,6 @@ import "react-toastify/dist/ReactToastify.css";
 
 
 
-import Home from "./pages/Home";
 import EventsList from "./pages/EventsList";
 import EditEvent from "./pages/EditEvent";
 import CreateEvent from "./pages/CreateEvent";
@@ -17,7 +16,6 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import OrganizerApproval from "./pages/OrganizerApproval";
 import StudentDashboard from "./pages/StudentDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -67,7 +65,6 @@ function Navbar() {
          <Link to="/"> Home</Link> {" "}
          <Link to="/login">Login</Link> {"  "}
          <Link to="/signup">Signup</Link> {"  "}
-         <Link to="/events">Events</Link> {"  "}
        </>
      )}
 
@@ -111,24 +108,16 @@ function App() {
 
 
      <Routes>
-       <Route path="/" element={ <PublicRoute> <Home /></PublicRoute>} />
+       <Route path="/" element={ <PublicRoute> <EventsList /></PublicRoute>} />
        <Route path="/login" element={ <PublicRoute> <Login /> </PublicRoute>} />
        <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
        <Route path="/logout" element={<Logout />} />
-
-
-       {/* Public Routes */}
-       <Route path="/events" element={<EventsList />} />
 
 
        {/* Admin Routes */}
        <Route path="/admin" element={
          <ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>
        } />
-       <Route path="/approval" element={
-         <ProtectedRoute roles={["admin"]}><OrganizerApproval /></ProtectedRoute>
-       } />
-
 
        {/* Student Routes */}
        <Route path="/student" element={

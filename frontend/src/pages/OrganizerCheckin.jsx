@@ -24,10 +24,10 @@ function OrganizerCheckin() {
         const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
 
         if (qrCode) resolve(qrCode.data);
-        else reject(new Error("invalid QR code"));
+        else reject(new Error("Invalid QR code"));
       };
 
-      img.onerror = () => reject(new Error("invalid QR code"));
+      img.onerror = () => reject(new Error("Invalid QR code"));
       img.src = URL.createObjectURL(imageFile);
     });
   };
@@ -43,14 +43,11 @@ function OrganizerCheckin() {
 
     try {
       const qrCodeData = await extractQRCodeFromImage(file);
-
       const verificationMatch = qrCodeData.match(/ticket_\d+_user_\d+_event_\d+/);
       const qrCodeString = verificationMatch ? verificationMatch[0] : qrCodeData;
 
       const res = await api.post("/api/tickets/checkin/", { qr_code: qrCodeString });
-      const data = res.data;
-
-      setMessage(data.message);
+      setMessage(res.data.message);
     } catch (err) {
       if (err.response && err.response.data) {
         setMessage(err.response.data.error || err.response.data.message);
@@ -75,19 +72,26 @@ function OrganizerCheckin() {
 
   return (
     <div className="organizer-dashboard">
-      <div className="organizer-header">
+      {/* Header */}
+      <div className="student-header">
         <h1>QR Check-in</h1>
         <p>Upload a student's QR code image to check them in</p>
       </div>
 
-      {/* Top Buttons for navigation */}
-      <div className="organizer-buttons">
-        <Link to="/create-event"><button>Create Event</button></Link>
-        <Link to="/organizer/analytics"><button>Analytics</button></Link>
-        <Link to="/organizer/checkin"><button className="active">QR Check-in</button></Link>
+      {/* Navigation Buttons like StudentDashboard */}
+      <div className="page-navigation">
+        <Link to="/create-event" className="nav-button inactive">
+          Create Event
+        </Link>
+        <Link to="/organizer/analytics" className="nav-button inactive">
+          Analytics
+        </Link>
+        <Link to="/organizer/checkin" className="nav-button active">
+          QR Check-in
+        </Link>
       </div>
 
-      {/* Check-in Card */}
+      {/* QR Check-in Card */}
       <div className="organizer-checkin-card">
         <input
           type="file"
@@ -98,6 +102,7 @@ function OrganizerCheckin() {
         <button
           onClick={handleUpload}
           disabled={!file || loading}
+          className="button"
         >
           {loading ? "Processing QR Code..." : "Check In"}
         </button>
