@@ -10,7 +10,7 @@ import "./dashboard.css";
 
 const AdminDashboard = () => {
   const tabs = ["Organizer Approval", "Event Moderation", "Global Analytics"];
-  const [active, setActive] = useState("Organizer Approval");
+  const [active, setActive] = useState("Global Analytics");
   const [search, setSearch] = useState("");
 
   return (
@@ -22,9 +22,7 @@ const AdminDashboard = () => {
       {/* Organizer Approval */}
       {active === "Organizer Approval" && (
         <div className="content-block">
-          <h2 className="section-title">
-            👤 Pending organizer applications
-          </h2>
+          <h1>👤Users</h1>
           <SearchBar
             value={search}
             onChange={setSearch}
@@ -37,7 +35,7 @@ const AdminDashboard = () => {
       {/* Event Moderation */}
       {active === "Event Moderation" && (
         <div className="content-block">
-          <h2 className="section-title">📅 Pending events</h2>
+          <h1>📅 Events</h1>
           <SearchBar
             value={search}
             onChange={setSearch}
@@ -49,7 +47,7 @@ const AdminDashboard = () => {
 
       {active === "Global Analytics" && (
         <div className="content-block">
-          <GlobalAnalytics />
+          <GlobalAnalytics search={search} />
         </div>
       )}
     </div>

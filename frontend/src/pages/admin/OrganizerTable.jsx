@@ -69,6 +69,16 @@ const OrganizerTable = ({ search }) => {
         await adminApi.rejectOrganizer(organizer.email);
       }
 
+      // Update UI instantly
+      setOrganizers((prev) =>
+        prev.map((o) =>
+          o.id === organizer.id
+            ? { ...o, status: action === "approve" ? "active" : "suspended" }
+            : o
+        )
+      );
+
+
     } catch (error) {
       console.error(`Failed to ${action} organizer:`, error);
     }
@@ -95,15 +105,12 @@ const OrganizerTable = ({ search }) => {
   // Prepare table data
   const tableData = filtered.map((o) => ({
     ...o,
-    submittedAt: new Date(o.submittedAt).toLocaleDateString(),
     status: o.status || "pending",
   }));
 
 
   return (
     <div>
-      <h2>Pending Organizers</h2>
-
       {filtered.length > 0 ? (
         <AdminTable
           columns={columns}
@@ -111,7 +118,7 @@ const OrganizerTable = ({ search }) => {
           getActions={getActionsForRow}
         />
       ) : (
-        <p>No pending organizers.</p>
+        <p>No users found.</p>
       )}
     </div>
   );
