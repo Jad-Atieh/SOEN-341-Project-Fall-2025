@@ -29,8 +29,10 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.http import HttpResponse
 import csv
+import cv2
+import numpy as np
 import re
-from rest_framework.parsers import JSONParser
+from rest_framework.parsers import MultiPartParser, JSONParser
 
 
 # Get custom user model
@@ -781,3 +783,41 @@ class GlobalAnalyticsView(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+# ------------------------------------
+# EVENT TICKETS DATA VIEW
+# ------------------------------------
+class EventTicketsDataView(APIView):
+
+    permission_classes = [IsOrganizerOrAdmin]  # only organizer or admin
+
+    def get(self, request, event_id):
+        tickets = Ticket.objects.filter(event_id=event_id).select_related('user', 'event')
+
+        # Build JSON data
+        ticket_data = []
+        for t in tickets:
+            ticket_data.append({
+                "student_name": t.user.name,
+                "student_email": t.user.email,
+                "event_title": t.event.title,
+                "status": t.status,
+                "claimed_at": t.claimed_at,
+                "used_at": t.used_at or None,
+            })
+
+
+        summary = {
+            "total_tickets": tickets.count(),
+            "claimed_tickets": tickets.filter(status__in=['active', 'used']).count(),
+            "used_tickets": tickets.filter(status='used').count(),
+            "capacity_left": t.event.capacity - tickets.count() if t.event.capacity else 0,
+        }
+
+        return Response({
+            "event_id": event_id,
+            "event_title": tickets.first().event.title if tickets.exists() else None,
+            "summary": summary,
+            "tickets": ticket_data
+        }, status=200)

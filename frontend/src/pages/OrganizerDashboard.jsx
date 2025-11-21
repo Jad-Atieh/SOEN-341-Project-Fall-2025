@@ -109,17 +109,20 @@ function OrganizerDashboard() {
         <p>Manage your events below</p>
       </div>
 
-      {/* --------- NAVIGATION BUTTONS (Student Dashboard style) --------- */}
+      {/* --------- NAVIGATION BUTTONS --------- */}
       <div className="page-navigation">
-        <Link to="/create-event" className="nav-button inactive">
-          Create Event
-        </Link>
-        <Link to="/organizer/analytics" className="nav-button inactive">
-          Analytics
-        </Link>
-        <Link to="/organizer/checkin" className="nav-button inactive">
-          QR Check-in
-        </Link>
+          <Link to="/organizer" className="nav-button active">
+              Events
+          </Link>
+          <Link to="/create-event" className="nav-button inactive">
+            Create Event
+          </Link>
+          <Link to="/organizer/analytics" className="nav-button inactive">
+            Analytics
+          </Link>
+          <Link to="/organizer/checkin" className="nav-button inactive">
+            QR Check-in
+          </Link>
       </div>
 
       {/* --------- SEARCH + FILTER --------- */}
