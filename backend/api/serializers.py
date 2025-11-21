@@ -81,8 +81,6 @@ class TicketSerializer(serializers.ModelSerializer):
     Converts Ticket model instances <-> JSON.
     - User field is read-only (taken from authenticated user).
     """
-
-
     event_title = serializers.CharField(source='event.title', read_only=True)
     user_name = serializers.CharField(source='user.name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
@@ -95,6 +93,47 @@ class TicketSerializer(serializers.ModelSerializer):
             'qr_code', 'status', 'claimed_at', 'used_at', 'is_valid'
         ]
         read_only_fields = ('user', 'claimed_at', 'used_at', 'qr_code')
+    
+    def validate(self, data):
+        """
+        Validate ticket creation - check capacity and duplicates
+        """
+        # Only run validation during creation (not updates)
+        if self.instance is None:
+            event = data.get('event')
+            user = data.get('user')
+            
+            # Check if event exists and has capacity
+            if event and hasattr(event, 'capacity'):
+                if event.capacity <= 0:
+                    raise serializers.ValidationError({
+                        "error": "This event is at full capacity"
+                    })
+            
+            # Check for duplicate tickets
+            if event and user:
+                if Ticket.objects.filter(event=event, user=user).exists():
+                    raise serializers.ValidationError({
+                        "error": "You already have a ticket for this event"
+                    })
+        
+        return data
+    
+    def create(self, validated_data):
+        """
+        Create ticket with additional validation
+        """
+        event = validated_data.get('event')
+        user = validated_data.get('user')
+        
+        # Final capacity check (in case of race conditions)
+        if event.capacity <= 0:
+            raise serializers.ValidationError({
+                "error": "Event is at full capacity"
+            })
+        
+        # Create the ticket - capacity will be decreased in model's save() method
+        return super().create(validated_data)
 
 # -------------------------------
 # USER SERIALIZER (For Admin Use)
@@ -112,9 +151,9 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['is_active']
 
 
-# -------------------------------
+# ---------------------------------------------------
 # TOKEN SERIALIZER WITH EXTRA CLAIMS (role and name)
-# -------------------------------
+# ---------------------------------------------------
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
