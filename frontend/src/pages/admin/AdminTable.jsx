@@ -17,7 +17,7 @@ return (
           {data.map((row, idx) => (
             <tr key={idx} className={idx % 2 === 0 ? "even-row" : "odd-row"}>
               {columns.map((col) => (
-                <td key={col.accessor}>{row[col.accessor]}</td>
+               <td key={col.accessor}>{row[col.accessor] == null ? "-" : row[col.accessor]}</td>
               ))}
 
               {getActions && (

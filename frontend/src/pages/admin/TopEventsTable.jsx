@@ -9,7 +9,7 @@ export default function TopEventsTable({ data }) {
     { header: "ID", accessor: "id" },
     { header: "Title", accessor: "title" },
     { header: "Category", accessor: "category" },
-    { header: "Organizer", accessor: "organizer_name" },
+    { header: "Organizer", accessor: "organization" },
     { header: "Tickets", accessor: "ticket_count" },
   ];
 
