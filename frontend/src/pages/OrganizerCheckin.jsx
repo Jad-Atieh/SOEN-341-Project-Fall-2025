@@ -80,6 +80,9 @@ function OrganizerCheckin() {
 
       {/* Navigation Buttons like StudentDashboard */}
       <div className="page-navigation">
+        <Link to="/organizer" className="nav-button inactive">
+          Events
+        </Link>
         <Link to="/create-event" className="nav-button inactive">
           Create Event
         </Link>
