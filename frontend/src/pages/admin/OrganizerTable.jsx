@@ -1,10 +1,52 @@
 import React, { useEffect, useState } from "react";
 import { adminApi } from "./adminApi";
-import Table from "../../components/Table";
+import AdminTable from "./AdminTable";
 
 const OrganizerTable = ({ search }) => {
   const [organizers, setOrganizers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Generate actions based on each row's status
+  const getActionsForRow = (row) => {
+    const status = row.status?.toLowerCase();
+
+    if (status === "active") {
+      return [
+        {
+          label: "Reject",
+          onClick: () => handleAction(row, "reject"),
+          type: "reject",
+        },
+      ];
+    }
+
+    if (status === "suspended") {
+      return [
+        {
+          label: "Approve",
+          onClick: () => handleAction(row, "approve"),
+          type: "approve",
+        },
+      ];
+    }
+
+    // pending → show both
+    return [
+      {
+        label: "Approve",
+        onClick: () => handleAction(row, "approve"),
+        type: "approve",
+      },
+      {
+        label: "Reject",
+        onClick: () => handleAction(row, "reject"),
+        type: "reject",
+      },
+    ];
+  };
+
+
+
 
   useEffect(() => {
     adminApi
@@ -27,8 +69,6 @@ const OrganizerTable = ({ search }) => {
         await adminApi.rejectOrganizer(organizer.email);
       }
 
-      // Remove the organizer after action
-      setOrganizers((prev) => prev.filter((o) => o.id !== organizer.id));
     } catch (error) {
       console.error(`Failed to ${action} organizer:`, error);
     }
@@ -45,14 +85,11 @@ const OrganizerTable = ({ search }) => {
 
   // Define columns for the Table component
   const columns = [
+    { header: "ID", accessor: "id" },
     { header: "Name", accessor: "name" },
-    { header: "Organization", accessor: "orgName" },
     { header: "Email", accessor: "email" },
-    {
-      header: "Submitted",
-      accessor: "submittedAt",
-    },
-    { header: "Status", accessor: "status" },
+    { header: "Role", accessor: "role" },
+    { header: "Status", accessor: "status" }
   ];
 
   // Prepare table data
@@ -62,30 +99,16 @@ const OrganizerTable = ({ search }) => {
     status: o.status || "pending",
   }));
 
-  // Define approve/reject actions
-  const actions = [
-    {
-      label: "Approve",
-      onClick: (o) => handleAction(o, "approve"),
-      type: "approve",
-    },
-    {
-      label: "Reject",
-      onClick: (o) => handleAction(o, "reject"),
-      type: "reject",
-    },
-  ];
-
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Pending Organizers</h2>
+    <div>
+      <h2>Pending Organizers</h2>
 
       {filtered.length > 0 ? (
-        <Table
+        <AdminTable
           columns={columns}
           data={tableData}
-          actions={actions}
+          getActions={getActionsForRow}
         />
       ) : (
         <p>No pending organizers.</p>
