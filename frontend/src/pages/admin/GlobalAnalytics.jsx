@@ -4,19 +4,7 @@ import { adminApi } from "./adminApi";
 import AnalyticsPieChart from "./AnalyticsPieChart";
 import TopEventsTable from "./TopEventsTable";
 import OrganizerPerformanceTable from "./OrganizerPerformanceTable";
-
-// Import Chart.js bar chart dependencies
-import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Tooltip,
-  Legend
-} from "chart.js";
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+import TicketsBarChart from "./TicketsBarChart";
 
 export default function GlobalAnalytics() {
   const [data, setData] = useState(null);
@@ -52,28 +40,6 @@ export default function GlobalAnalytics() {
     { name: "Rejected", value: data.events.rejected },
   ];
 
-  // Bar chart data for tickets
-  const ticketsBarData = {
-    labels: ["Total", "Active", "Used", "Cancelled"],
-    datasets: [
-      {
-        label: "Tickets",
-        data: [
-          data.tickets.total,
-          data.tickets.active,
-          data.tickets.used,
-          data.tickets.cancelled,
-        ],
-        backgroundColor: "#673AB7",
-      },
-    ],
-  };
-
-  const barOptions = {
-    responsive: true,
-    plugins: { legend: { display: false } },
-  };
-
   return (
     <div style={{ padding: "20px" }}>
       {/* Charts Grid */}
@@ -85,23 +51,14 @@ export default function GlobalAnalytics() {
           marginBottom: "40px",
         }}
       >
-        <AnalyticsPieChart title="Users Breakdown" data={usersData} />
-        <AnalyticsPieChart title="Events Breakdown" data={eventsData} />
+        <AnalyticsPieChart
+          title="Users Overview"
+          data={usersData}
+          roles={data.users.by_role}
+        />        
+        <AnalyticsPieChart title="Events Overview" data={eventsData} />
+        <TicketsBarChart data={data.tickets} />
 
-        {/* NEW TICKETS BAR CHART */}
-        <div
-          style={{
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            background: "white",
-          }}
-        >
-          <h3 style={{ textAlign: "center", marginBottom: "10px" }}>
-            Tickets Overview
-          </h3>
-          <Bar data={ticketsBarData} options={barOptions} />
-        </div>
       </div>
 
       {/* Top Events Table */}

@@ -10,7 +10,7 @@ import "./dashboard.css";
 
 const AdminDashboard = () => {
   const tabs = ["Organizer Approval", "Event Moderation", "Global Analytics"];
-  const [active, setActive] = useState("Global Analytics");
+  const [active, setActive] = useState("Organizer Approval");
   const [search, setSearch] = useState("");
 
   return (
