@@ -171,7 +171,7 @@ function OrganizerAnalytics() {
             const totalTickets = tickets.length;
             const usedTickets = tickets.filter(t => t.status === "used").length;
             const claimedTickets = tickets.filter(t => t.status === "active").length;
-            const availableTickets = Math.max((event.capacity || 0) - totalTickets, 0);
+            const availableTickets = event.capacity || 0;
             const attendanceRate = totalTickets > 0 ? ((usedTickets / totalTickets) * 100).toFixed(1) : 0;
 
             return (
@@ -188,10 +188,6 @@ function OrganizerAnalytics() {
                     <div className="detail-row">
                       <span className="detail-label">Date & Time</span>
                       <span className="detail-value">{event.date} • {event.start_time} - {event.end_time}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Capacity</span>
-                      <span className="detail-value">{event.capacity} seats</span>
                     </div>
                     <div className="detail-row">
                       <span className="detail-label">Attendance Rate</span>
@@ -212,7 +208,7 @@ function OrganizerAnalytics() {
                       </div>
                       <div className="mini-stat">
                         <span className="mini-stat-value">{availableTickets}</span>
-                        <span className="mini-stat-label">Available</span>
+                        <span className="mini-stat-label">Capacity</span>
                       </div>
                     </div>
                   </div>
