@@ -1,55 +1,70 @@
 .table-container {
     overflow-x: auto;
-    background-color: #F3F4FF; 
-    padding: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-radius: 8px;
+    background-color: #F3F4FF;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    font-family: 'Poppins', sans-serif;
 }
 
 .table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
     table-layout: fixed;
 }
 
 th, td {
-    border: 1px solid #ccc;
-    padding: 8px 12px;
+    padding: 1rem;
     text-align: left;
+    color: #333;
+    font-size: 1rem;
 }
 
-thead {
-    background-color: #5B2C6F; 
+thead th {
+    background-color: #5B2C6F;
     color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    border-radius: 8px 8px 0 0;
 }
 
-.even-row {
-    background-color: #EDE7F6; 
+tbody tr {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.odd-row {
-    background-color: #F3F4FF; 
-}
-
-tr:hover {
-    background-color: #D1C4E9; 
+tbody tr:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
 }
 
 .actions {
     display: flex;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    justify-content: flex-start;
 }
 
-.btn {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.875rem;
+.actions .btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    min-width: 70px;
+    flex: 1 1 auto;
+    text-align: center;
+    border-radius: 8px;
     cursor: pointer;
     border: none;
-    transition: background-color 0.2s, transform 0.2s;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
 }
 
-/* Approve button - blue accent */
 .btn.approve {
     background-color: #3F51B5;
     color: white;
@@ -57,10 +72,9 @@ tr:hover {
 
 .btn.approve:hover {
     background-color: #6573C3;
-    transform: scale(1.05);
+    transform: scale(1.03);
 }
 
-/* Reject button - purple */
 .btn.reject {
     background-color: #5B2C6F;
     color: white;
@@ -68,10 +82,9 @@ tr:hover {
 
 .btn.reject:hover {
     background-color: #7E57C2;
-    transform: scale(1.05);
+    transform: scale(1.03);
 }
 
-/* Default button - neutral */
 .btn.default {
     background-color: #E5E7EB;
     color: #111827;
@@ -79,5 +92,21 @@ tr:hover {
 
 .btn.default:hover {
     background-color: #D1D5DB;
-    transform: scale(1.05);
+    transform: scale(1.03);
+}
+
+tbody td {
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+    .table-container {
+        padding: 1rem;
+    }
+    th, td {
+        padding: 0.75rem;
+        font-size: 0.95rem;
+    }
 }

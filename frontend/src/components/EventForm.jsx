@@ -29,6 +29,7 @@ function EventForm({ eventId }) {
     description: "",
     organization: "",
     category: "",
+    ticket_type: "free",
   });
 
   useEffect(() => {
@@ -47,6 +48,7 @@ function EventForm({ eventId }) {
           description: res.data.description,
           organization: res.data.organization,
           category: res.data.category,
+          ticket_type: res.data.ticket_type || "free",
         });
       } catch (err) {
         console.error(err);
@@ -68,7 +70,7 @@ function EventForm({ eventId }) {
     try {
       const payload = {
         ...form,
-        approval_status: "pending", // always pending
+        approval_status: "pending",
       };
 
       if (eventId) {
@@ -177,6 +179,17 @@ function EventForm({ eventId }) {
           onChange={handleChange}
           required
         />
+
+        <select
+          className="form-input"
+          name="ticket_type"
+          value={form.ticket_type}
+          onChange={handleChange}
+          required
+        >
+          <option value="free">Free</option>
+          <option value="paid">Paid</option>
+        </select>
 
         <button className="form-button" type="submit">
           {eventId ? "Save Changes" : "Create Event"}
