@@ -39,6 +39,7 @@ from .views import (
     EventFeedbackView,
 )
 
+
 urlpatterns = [
     # -------------------------------
     # USER AUTHENTICATION & REGISTRATION

@@ -21,6 +21,7 @@ import OrganizerApproval from "./pages/OrganizerApproval";
 import StudentDashboard from "./pages/StudentDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import StudentTickets from "./pages/StudentTickets";
 
 
 // logout function
@@ -74,6 +75,7 @@ function Navbar() {
      {isLoggedIn && role === "student" && (
        <>
          <Link to="/student">Student Dashboard</Link> {"  "}
+          <Link to="/student/tickets">My Tickets</Link> {"  "}
          <button onClick={handleLogout} className="button-style">Sign Out</button>
        </>
      )}
@@ -132,6 +134,9 @@ function App() {
        <Route path="/student" element={
          <ProtectedRoute roles={["student"]}><StudentDashboard /></ProtectedRoute>
        } />
+       <Route path="/student/tickets" element={
+          <ProtectedRoute roles={["student"]}><StudentTickets /></ProtectedRoute>
+        } />
 
 
        {/* Organizer Routes */}
