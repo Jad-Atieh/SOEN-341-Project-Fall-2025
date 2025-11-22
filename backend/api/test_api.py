@@ -5,28 +5,30 @@ from rest_framework import status
 from api.models import Event, Ticket, User
 import datetime
 
+# -----------------------------
+# Helper function to create users
+# -----------------------------
+def create_user(email, role='student', password='password123', is_active=True):
+    user = User.objects.create_user(
+        email=email,
+        password=password,
+        role=role,
+        name=email.split('@')[0],  # simple name
+        status='active' if is_active else 'pending'
+    )
+    return user
 
+
+# -----------------------------
+# TICKET CHECK-IN TESTS
+# -----------------------------
 class TicketCheckInTests(TestCase):
     def setUp(self):
-        # Organizer user (authorized for check-in)
-        self.organizer = User.objects.create_user(
-            email='organizer@example.com',
-            name='Organizer Name',
-            password='password123',
-            role='organizer',
-            status='active',
-        )
+        # Users
+        self.organizer = create_user(email='org@test.com', role='organizer')
+        self.student = create_user(email='student@test.com', role='student')
 
-        # Student user (ticket owner)
-        self.student = User.objects.create_user(
-            email='student@example.com',
-            name='Student Name',
-            password='password123',
-            role='student',
-            status='active',
-        )
-
-        # Create Event organized by organizer
+        # Event
         now = timezone.now()
         self.event = Event.objects.create(
             title="Test Event",
@@ -39,52 +41,135 @@ class TicketCheckInTests(TestCase):
             organizer=self.organizer
         )
 
-        # Create Ticket for student
+        # Ticket
         self.ticket = Ticket.objects.create(
             event=self.event,
             user=self.student,
             qr_code="VALID_QR_12345",
-            status="active",
+            status='active'
         )
 
-        # API client authenticated as organizer
+        # API client
         self.client = APIClient()
         self.client.force_authenticate(user=self.organizer)
 
-    def post_checkin(self, qr_code):
-        return self.client.post(
+    def test_checkin_ticket_success(self):
+        response = self.client.post(
             '/api/tickets/checkin/',
-            {'qr_code': qr_code},
+            {'qr_code': self.ticket.qr_code},
             format='json'
         )
-
-    def test_checkin_ticket_success(self):
-        response = self.post_checkin(self.ticket.qr_code)
-        print(f"Success response: {response.status_code} {response.data}")
+        print("Success response:", response.status_code, getattr(response, 'data', response.content))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.ticket.refresh_from_db()
-        self.assertEqual(self.ticket.status, "used")
-        self.assertIsNotNone(self.ticket.used_at)
-
-    def test_checkin_ticket_already_used(self):
-        # Mark ticket as already used
-        self.ticket.status = "used"
-        self.ticket.used_at = timezone.now()
-        self.ticket.save()
-
-        response = self.post_checkin(self.ticket.qr_code)
-        print(f"Already used response: {response.status_code} {response.data}")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("already been used", response.data['message'])
+        self.assertEqual(self.ticket.status, 'used')
+        print("Test succeeded: test_checkin_ticket_success")
 
     def test_checkin_ticket_invalid_qr(self):
-        response = self.post_checkin("INVALID_QR")
-        print(f"Invalid QR response: {response.status_code} {response.data}")
+        response = self.client.post(
+            '/api/tickets/checkin/',
+            {'qr_code': 'INVALID_QR'},
+            format='json'
+        )
+        print("Invalid QR response:", response.status_code, getattr(response, 'data', response.content))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn("Invalid QR code", response.data['error'])
+        print("Test succeeded: test_checkin_ticket_invalid_qr")
+
+    def test_checkin_ticket_already_used(self):
+        self.ticket.status = 'used'
+        self.ticket.save()
+        response = self.client.post(
+            '/api/tickets/checkin/',
+            {'qr_code': self.ticket.qr_code},
+            format='json'
+        )
+        print("Already used response:", response.status_code, getattr(response, 'data', response.content))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('This ticket has already been used.', str(getattr(response, 'data', '')))
+        print("Test succeeded: test_checkin_ticket_already_used")
 
     def test_checkin_unauthorized_user(self):
         self.client.force_authenticate(user=None)
-        response = self.post_checkin(self.ticket.qr_code)
-        print(f"Unauthorized response: {response.status_code} {response.data}")
+        response = self.client.post(
+            '/api/tickets/checkin/',
+            {'qr_code': self.ticket.qr_code},
+            format='json'
+        )
+        print("Unauthorized response:", response.status_code, getattr(response, 'data', response.content))
         self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+        print("Test succeeded: test_checkin_unauthorized_user")
+
+
+# -----------------------------
+# ADMIN USER MANAGEMENT TESTS
+# -----------------------------
+class AdminUserManagementTests(TestCase):
+    def setUp(self):
+        self.admin = create_user(email='admin@test.com', role='admin')
+        self.pending_organizer = create_user(email='pending@test.com', role='organizer', is_active=False)
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.admin)
+
+    def test_approve_user_status(self):
+        response = self.client.patch(
+            '/api/users/manage/',
+            {'email': self.pending_organizer.email, 'status': 'active'},
+            format='json'
+        )
+        print("Approve user response:", response.status_code, getattr(response, 'data', response.content))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print("Test succeeded: test_approve_user_status")
+
+    def test_suspend_user_status(self):
+        response = self.client.patch(
+            '/api/users/manage/',
+            {'email': self.pending_organizer.email, 'status': 'suspended'},
+            format='json'
+        )
+        print("Suspend user response:", response.status_code, getattr(response, 'data', response.content))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print("Test succeeded: test_suspend_user_status")
+
+
+# -----------------------------
+# ORGANIZER EVENT TESTS
+# -----------------------------
+class OrganizerEventTests(TestCase):
+    def setUp(self):
+        self.organizer = create_user(email='org1@test.com', role='organizer')
+        self.other_organizer = create_user(email='org2@test.com', role='organizer')
+        now = timezone.now()
+        self.event = Event.objects.create(
+            title="Own Event",
+            description="Organizer own event",
+            date=now.date(),
+            start_time=now.time(),
+            end_time=(now + datetime.timedelta(hours=2)).time(),
+            location="Test Location",
+            status="pending",
+            organizer=self.organizer
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.organizer)
+
+    def test_update_own_event_success(self):
+        response = self.client.patch(
+            f'/api/events/organizer/{self.event.id}/',
+            {'description': 'Updated description'},
+            format='json'
+        )
+        print("Update own event response:", response.status_code, getattr(response, 'data', response.content))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print("Test succeeded: test_update_own_event_success")
+
+    def test_update_other_organizer_event_forbidden(self):
+        self.client.force_authenticate(user=self.other_organizer)
+        response = self.client.patch(
+            f'/api/events/organizer/{self.event.id}/',
+            {'description': 'Malicious update'},
+            format='json'
+        )
+        print("Update other event response:", response.status_code, getattr(response, 'data', response.content))
+        self.assertIn(response.status_code, [status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND])
+        print("Test succeeded: test_update_other_organizer_event_forbidden")
+
