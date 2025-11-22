@@ -361,9 +361,16 @@ class Ticket(models.Model):
 class EventFeedback(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="feedbacks")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    rating = models.IntegerField(default=5)
+    ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE, related_name="feedback", null=True, blank=True)
+    rating = models.IntegerField(
+        choices=[(1, '1 Star'), (2, '2 Stars'), (3, '3 Stars'), (4, '4 Stars'), (5, '5 Stars')],
+        default=5
+    )
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("event", "user")  # One feedback per user
+        unique_together = ("event", "user")  # One feedback per user per event
+
+    def __str__(self):
+        return f"{self.user.name} - {self.event.title} - {self.rating}/5"

@@ -37,6 +37,9 @@ from .views import (
     StudentTicketDetailView,
     StudentTicketListView,
     EventFeedbackView,
+    CanProvideFeedbackView,
+    MyFeedbackListView,
+    EventsForFeedbackView,
 )
 
 
@@ -152,5 +155,13 @@ urlpatterns = [
     # -------------------------------
     # Endpoint: GET /api/analytics/global/
     path("analytics/global/", views.GlobalAnalyticsView.as_view(), name="global-analytics"),
+
+    # -------------------------------
+    # EVENT FEEDBACK
+    # -------------------------------
+    path('events/<int:event_id>/can-provide-feedback/', CanProvideFeedbackView.as_view(), name='can-provide-feedback'),
+    path('events/<int:event_id>/feedback/', EventFeedbackView.as_view(), name='event-feedback'),
+    path('my-feedback/', MyFeedbackListView.as_view(), name='my-feedback'),
+    path('events-for-feedback/', EventsForFeedbackView.as_view(), name='events-for-feedback'),
 
 ]

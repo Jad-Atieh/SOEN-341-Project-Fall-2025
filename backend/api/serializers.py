@@ -174,9 +174,60 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 # EVENT FEEDBACK SERIALIZER
 # -------------------------------
 class EventFeedbackSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField(read_only=True)
-
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    event_title = serializers.CharField(source='event.title', read_only=True)
+    
     class Meta:
         model = EventFeedback
-        fields = ["id", "event", "user", "rating", "comment", "created_at"]
+        fields = ["id", "event", "user", "user_name", "ticket", "event_title", "rating", "comment", "created_at"]
         read_only_fields = ["user", "created_at"]
+
+    def validate(self, data):
+        """
+        Validate that user can provide feedback for this event
+        """
+        request = self.context.get('request')
+        event = data.get('event')
+
+        if request and request.method == 'POST':
+            # Check if user has a used ticket for this event
+            if not Ticket.objects.filter(
+                event=event, 
+                user=request.user, 
+                status='used'
+            ).exists():
+                raise serializers.ValidationError(
+                    "You can only provide feedback for events you have attended."
+                )
+
+            # Check for duplicate feedback
+            if EventFeedback.objects.filter(event=event, user=request.user).exists():
+                raise serializers.ValidationError(
+                    "You have already provided feedback for this event."
+                )
+
+        return data
+
+    def create(self, validated_data):
+        """
+        Automatically set the user from the request context
+        Optionally set the ticket if available
+        """
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            validated_data['user'] = request.user
+            
+            # Try to find the user's used ticket for this event, but don't require it
+            event = validated_data['event']
+            try:
+                ticket = Ticket.objects.get(
+                    event=event, 
+                    user=request.user, 
+                    status='used'
+                )
+                validated_data['ticket'] = ticket
+            except Ticket.DoesNotExist:
+                # Ticket is optional, so we can proceed without it
+                pass
+        
+        return super().create(validated_data)

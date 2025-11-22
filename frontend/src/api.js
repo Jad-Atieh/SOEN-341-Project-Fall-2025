@@ -20,4 +20,27 @@ api.interceptors.request.use(
   }
 );
 
+// Feedback API functions
+export const feedbackService = {
+  // Check if user can provide feedback for an event
+  canProvideFeedback: (eventId) => 
+    api.get(`/api/events/${eventId}/can-provide-feedback/`),
+
+  // Submit feedback for an event
+  submitFeedback: (eventId, data) => 
+    api.post(`/api/events/${eventId}/feedback/`, data),
+
+  // Get user's feedback for a specific event
+  getEventFeedback: (eventId) => 
+    api.get(`/api/events/${eventId}/feedback/`),
+
+  // Get all feedback submitted by the user
+  getMyFeedback: () => 
+    api.get('/api/my-feedback/'),
+    
+  // Get events available for feedback
+  getEventsForFeedback: () =>
+    api.get('/api/events-for-feedback/'),
+};
+
 export default api;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "../api";
+import api, { feedbackService } from "../api";
 import Modal from "../components/Modal";
 import "../styles/PageStyle.css";
 import { Link } from "react-router-dom"; 
@@ -7,10 +7,9 @@ import { Link } from "react-router-dom";
 function StudentDashboard() {
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [eventsForFeedback, setEventsForFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [rating, setRating] = useState("");
-
   const [filter, setFilter] = useState("date");
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEvent, setModalEvent] = useState(null);
@@ -33,8 +32,18 @@ function StudentDashboard() {
     }
   };
 
+  const fetchEventsForFeedback = async () => {
+    try {
+      const res = await feedbackService.getEventsForFeedback();
+      console.log("Events available for feedback:", res.data); // Debug log
+      setEventsForFeedback(res.data);
+    } catch (err) {
+      console.error("Error fetching events for feedback:", err);
+    }
+  };
+
   const fetchData = async () => {
-    await Promise.all([fetchEvents(), fetchTickets()]);
+    await Promise.all([fetchEvents(), fetchTickets(), fetchEventsForFeedback()]);
     setLoading(false);
   };
 
@@ -43,6 +52,10 @@ function StudentDashboard() {
   }, []);
 
   const isClaimed = (eventId) => tickets.some((t) => t.event === eventId);
+  
+  // Check if a specific event can have feedback
+  const canProvideFeedback = (eventId) => 
+    eventsForFeedback.some(event => event.id === eventId);
 
   const filteredEvents = events
     .filter((e) => {
@@ -75,29 +88,11 @@ function StudentDashboard() {
 
   if (loading) return <p className="student-loading">Loading events...</p>;
 
-  const submitRating = async () => {
-    if (!rating) return alert("Please select a rating.");
-  
-    try {
-      await api.post(`/api/events/${modalEvent.id}/feedback/`, {
-        rating: parseInt(rating),
-      });
-  
-      alert("Rating submitted!");
-      setRating("");
-      fetchEvents(); // refresh avg rating
-    } catch (err) {
-      console.error(err);
-      alert("Failed to submit rating");
-    }
-  };
-  
-
   return (
     <div className="student-dashboard">
       <div className="student-header">
         <h1>Welcome to your Student Dashboard!</h1>
-        <p>Browse events, claim tickets, and view details.</p>
+        <p>Browse events, claim tickets, and share your feedback.</p>
       </div>
 
       {/* Navigation Buttons */}
@@ -108,9 +103,36 @@ function StudentDashboard() {
         <Link to="/student/tickets" className="nav-button inactive">
           My Tickets
         </Link>
+        <Link to="/my-feedback" className="nav-button inactive">
+          My Feedback
+        </Link>
       </div>
 
-      {/* Search and filter - using SAME structure as tickets page */}
+      {/* Feedback Prompt Section - Uses EventsForFeedbackView */}
+      {eventsForFeedback.length > 0 && (
+        <div className="feedback-prompt-section">
+          <h3>Events waiting for your feedback!</h3>
+          <p>Share your experience with events you've attended</p>
+          <div className="events-for-feedback-list">
+            {eventsForFeedback.map(event => (
+              <div key={event.id} className="feedback-event-card">
+                <div className="event-info">
+                  <h4>{event.title}</h4>
+                  <span>Attended on {event.date}</span>
+                </div>
+                <Link 
+                  to={`/feedback/${event.id}`}
+                  className="feedback-btn"
+                >
+                  Leave Feedback
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Search and filter */}
       <div className="search-filter-container">
         <input
           type="text"
@@ -129,7 +151,7 @@ function StudentDashboard() {
         </div>
       </div>
 
-      {/* Events grid */}
+      {/* Events grid - Uses canProvideFeedback for individual events */}
       <div className="events-grid">
         {filteredEvents.length === 0 ? (
           <div className="student-no-events">No events available.</div>
@@ -169,6 +191,12 @@ function StudentDashboard() {
                     <strong>{isClaimed(event.id) ? "Claimed ✓" : "Available"}</strong>
                   </span>
                 </div>
+                <div className="detail-group">
+                  <span className="detail-label">Rating</span>
+                  <span className="detail-value">
+                    {event.average_rating ? `${event.average_rating} ⭐` : "No ratings"}
+                  </span>
+                </div>
               </div>
 
               <div className="event-card-actions">
@@ -188,6 +216,15 @@ function StudentDashboard() {
                 >
                   View Details
                 </button>
+                  {/* Individual event feedback check */}
+                  {canProvideFeedback(event.id) && (
+                  <Link 
+                    to={`/feedback/${event.id}`}
+                    className="feedback-btn-small"
+                  >
+                    Leave Feedback
+                  </Link>
+                )}
               </div>
             </div>
           ))
@@ -206,7 +243,15 @@ function StudentDashboard() {
               onClick: () => setModalOpen(false),
               type: "secondary",
             },
-          ]}
+            canProvideFeedback(modalEvent.id) && {
+              label: "Leave Feedback", 
+              onClick: () => {
+                setModalOpen(false);
+                window.location.href = `/feedback/${modalEvent.id}`;
+              },
+              type: "primary",
+            },
+          ].filter(Boolean)}
         >
           <dl className="modal-body">
             <div className="modal-row">
@@ -246,34 +291,9 @@ function StudentDashboard() {
               <dd>{modalEvent.organization}</dd>
             </div>
             <div className="modal-row">
-                <dt>Average Rating:</dt>
-                <dd>{modalEvent.avg_rating ? modalEvent.avg_rating.toFixed(1) : "No ratings yet"}</dd>
-              </div>
-
-              {/* Allow student to rate ONLY if they claimed the ticket */}
-              {isClaimed(modalEvent.id) && (
-                <div className="modal-row">
-                  <dt>Your Rating:</dt>
-                  <dd>
-                    <select
-                      value={rating}
-                      onChange={(e) => setRating(Number(e.target.value))}
-                    >
-                      <option value="">Select</option>
-                      <option value="1">1 ⭐</option>
-                      <option value="2">2 ⭐</option>
-                      <option value="3">3 ⭐</option>
-                      <option value="4">4 ⭐</option>
-                      <option value="5">5 ⭐</option>
-                    </select>
-
-                    <button onClick={submitRating} className="btn primary" style={{ marginLeft: "10px" }}>
-                      Submit Rating
-                    </button>
-                  </dd>
-                </div>
-              )}
-
+              <dt>Average Rating:</dt>
+              <dd>{modalEvent.average_rating ? `${modalEvent.average_rating.toFixed(1)} ⭐` : "No ratings yet"}</dd>
+            </div>
           </dl>
         </Modal>
       )}

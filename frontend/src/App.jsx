@@ -22,7 +22,8 @@ import StudentDashboard from "./pages/StudentDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import StudentTickets from "./pages/StudentTickets";
-
+import EventFeedback from './pages/EventFeedback';
+import MyFeedback from "./pages/MyFeedback";
 
 // logout function
 function Logout() {
@@ -156,6 +157,22 @@ function App() {
        } />
         <Route path="/edit-event/:id" element={
           <ProtectedRoute roles={["organizer", "admin"]}><EditEvent /></ProtectedRoute>
+        } />
+
+        {/* Student Routes */}
+        <Route path="/student" element={
+          <ProtectedRoute roles={["student"]}><StudentDashboard /></ProtectedRoute>
+        } />
+        <Route path="/student/tickets" element={
+          <ProtectedRoute roles={["student"]}><StudentTickets /></ProtectedRoute>
+        } />
+
+        {/* Event feedback */}
+        <Route path="/feedback/:eventId" element={
+          <ProtectedRoute roles={["student"]}><EventFeedback /></ProtectedRoute>
+        } />
+        <Route path="/my-feedback" element={
+          <ProtectedRoute roles={["student"]}><MyFeedback /></ProtectedRoute>
         } />
 
 

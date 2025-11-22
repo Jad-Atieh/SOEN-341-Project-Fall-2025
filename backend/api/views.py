@@ -792,22 +792,115 @@ class GlobalAnalyticsView(APIView):
 
 
 # ------------------------------------
+# CAN PROVIDE FEEDBACK CHECK API
+# ------------------------------------
+class CanProvideFeedbackView(APIView):
+    """
+    Check if user can provide feedback for a specific event
+    Returns: {can_provide_feedback: boolean, ticket_id: int|null}
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, event_id):
+        try:
+            # Check if user has a used ticket for this event
+            ticket = Ticket.objects.get(
+                event_id=event_id, 
+                user=request.user, 
+                status='used'
+            )
+            
+            # Check if user already provided feedback
+            has_feedback = EventFeedback.objects.filter(
+                event_id=event_id, 
+                user=request.user
+            ).exists()
+            
+            return Response({
+                'can_provide_feedback': not has_feedback,
+                'ticket_id': ticket.id if not has_feedback else None
+            })
+            
+        except Ticket.DoesNotExist:
+            return Response({
+                'can_provide_feedback': False,
+                'ticket_id': None
+            })
+
+# ------------------------------------
 # EVENT FEEDBACK API
 # ------------------------------------
 class EventFeedbackView(generics.ListCreateAPIView):
     serializer_class = EventFeedbackSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         event_id = self.kwargs["event_id"]
         return EventFeedback.objects.filter(event__id=event_id)
 
+    def get_serializer_context(self):
+        """Pass request context to serializer"""
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
     def perform_create(self, serializer):
         event_id = self.kwargs["event_id"]
+        event = get_object_or_404(Event, id=event_id)
 
-        # Only attendees can submit feedback
-        event = Event.objects.get(id=event_id)
-        if not Ticket.objects.filter(event=event, user=self.request.user).exists():
-            raise PermissionDenied("You must attend the event to submit feedback.")
+        # Only attendees with a USED ticket can submit feedback
+        ticket = Ticket.objects.filter(
+            event=event, 
+            user=self.request.user, 
+            status='used'
+        ).first()
 
-        serializer.save(event=event, user=self.request.user)
+        if not ticket:
+            raise PermissionDenied("You may only leave feedback after checking in to the event.")
+
+        # Check for duplicate feedback
+        if EventFeedback.objects.filter(event=event, user=self.request.user).exists():
+            raise PermissionDenied("You have already provided feedback for this event.")
+
+        serializer.save(event=event)
+
+# ------------------------------------
+# MY FEEDBACK LIST API
+# ------------------------------------
+class MyFeedbackListView(generics.ListAPIView):
+    """
+    Get all feedback submitted by the current user
+    """
+    serializer_class = EventFeedbackSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return EventFeedback.objects.filter(user=self.request.user).select_related('event')
+
+# ------------------------------------
+# EVENTS AVAILABLE FOR FEEDBACK
+# ------------------------------------
+class EventsForFeedbackView(generics.ListAPIView):
+    """
+    Get all events that the user can provide feedback for
+    (events where user has used tickets but hasn't provided feedback)
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        
+        # Get events where user has used tickets - use the correct related name
+        events_with_used_tickets = Event.objects.filter(
+            ticket__user=user,  # Use 'ticket' (the field name) not 'tickets'
+            ticket__status='used'
+        ).distinct()
+        
+        # Exclude events where user already provided feedback
+        events_with_feedback = Event.objects.filter(
+            feedbacks__user=user
+        ).distinct()
+        
+        return events_with_used_tickets.exclude(id__in=events_with_feedback)
 
