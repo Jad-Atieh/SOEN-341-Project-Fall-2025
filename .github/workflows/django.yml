@@ -1,7 +1,7 @@
 name: Django CI
 run-name: ${{ github.actor }} is testing out django ci
-#on: [push, pull_request]
-on: [push]
+on: [push, pull_request]
+#on: [push]
 
 jobs:
   #joe:
