@@ -99,6 +99,20 @@ class TicketCheckInTests(TestCase):
         self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
         print("Test succeeded: test_checkin_unauthorized_user")
 
+    def test_checkin_ticket_inactive(self):
+        self.ticket.status = 'inactive'
+        self.ticket.save()
+        response = self.client.post(
+            '/api/tickets/checkin/',
+            {'qr_code': self.ticket.qr_code},
+            format='json'
+        )
+        print("Inactive ticket response:", response.status_code, getattr(response, 'data', response.content))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.ticket.refresh_from_db()
+        self.assertEqual(self.ticket.status, 'used')
+        print("Test succeeded: test_checkin_ticket_inactive")
+
 
 # -----------------------------
 # ADMIN USER MANAGEMENT TESTS
@@ -172,4 +186,42 @@ class OrganizerEventTests(TestCase):
         print("Update other event response:", response.status_code, getattr(response, 'data', response.content))
         self.assertIn(response.status_code, [status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND])
         print("Test succeeded: test_update_other_organizer_event_forbidden")
+
+# -----------------------------
+# ORGANIZER CANNOT CHANGE STATUS TEST
+# -----------------------------
+class OrganizerCannotChangeStatusTests(TestCase):
+    def setUp(self):
+        self.organizer = create_user(email='org3@test.com', role='organizer')
+        now = timezone.now()
+
+        self.event = Event.objects.create(
+            title="Status Test Event",
+            description="Event for testing status updates",
+            date=now.date(),
+            start_time=now.time(),
+            end_time=(now + datetime.timedelta(hours=1)).time(),
+            location="Test Location",
+            status="pending",
+            organizer=self.organizer
+        )
+
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.organizer)
+
+    def test_organizer_cannot_change_status(self):
+        response = self.client.patch(
+            f'/api/events/organizer/{self.event.id}/',
+            {'status': 'approved'},   # THIS SHOULD NOT BE ALLOWED
+            format='json'
+        )
+
+        # Should still succeed but ignore status change
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Confirm status did NOT change
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.status, "pending")
+
+        print("Test succeeded: Organizer cannot change event status")
 
