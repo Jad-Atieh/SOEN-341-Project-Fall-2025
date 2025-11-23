@@ -359,7 +359,7 @@
   margin-top: auto;
 }
 
-.claim-btn, .details-btn {
+.claim-btn, .details-btn, .feedback-btn-small {
   flex: 1;
   background-color: #5B2C6F;
   color: white;
@@ -372,7 +372,7 @@
   transition: all 0.2s ease-in-out;
 }
 
-.claim-btn:hover:not(:disabled), .details-btn:hover {
+.claim-btn:hover:not(:disabled), .details-btn:hover, .feedback-btn-small:hover {
   background-color: #3F51B5;
   transform: scale(1.03);
 }
@@ -777,6 +777,8 @@
   margin-bottom: 2rem;
   width: 100%;
   max-width: 1200px;
+  margin: 0 auto 2rem auto;
+  box-sizing: border-box;
 }
 
 .feedback-prompt-section h3 {
@@ -847,29 +849,6 @@
 }
 
 .feedback-btn:hover {
-  background: #3F51B5;
-  transform: scale(1.05);
-  color: white;
-  text-decoration: none;
-}
-
-.feedback-btn-small {
-  background: #5B2C6F;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-  font-size: 0.8rem;
-  transition: all 0.2s ease;
-  flex: 1;
-}
-
-.feedback-btn-small:hover {
   background: #3F51B5;
   transform: scale(1.05);
   color: white;

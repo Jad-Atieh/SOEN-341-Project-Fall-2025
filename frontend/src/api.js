@@ -27,8 +27,11 @@ export const feedbackService = {
     api.get(`/api/events/${eventId}/can-provide-feedback/`),
 
   // Submit feedback for an event
-  submitFeedback: (eventId, data) => 
-    api.post(`/api/events/${eventId}/feedback/`, data),
+  submitFeedback: (data) => 
+    api.post(`/api/events/${data.event_id}/feedback/`, {
+      rating: data.rating,
+      comment: data.comment
+    }),
 
   // Get user's feedback for a specific event
   getEventFeedback: (eventId) => 

@@ -830,39 +830,58 @@ class CanProvideFeedbackView(APIView):
 # ------------------------------------
 # EVENT FEEDBACK API
 # ------------------------------------
-class EventFeedbackView(generics.ListCreateAPIView):
-    serializer_class = EventFeedbackSerializer
+class EventFeedbackView(APIView):
+    """
+    Handle event feedback submission
+    POST /api/events/<event_id>/feedback/
+    """
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        event_id = self.kwargs["event_id"]
-        return EventFeedback.objects.filter(event__id=event_id)
+    def post(self, request, event_id):
+        try:
+            # Get event for permission checks
+            event = get_object_or_404(Event, id=event_id)
 
-    def get_serializer_context(self):
-        """Pass request context to serializer"""
-        context = super().get_serializer_context()
-        context['request'] = self.request
-        return context
+            # Check if user has a USED ticket for this event
+            ticket = Ticket.objects.filter(
+                event=event, 
+                user=request.user, 
+                status='used'
+            ).first()
 
-    def perform_create(self, serializer):
-        event_id = self.kwargs["event_id"]
-        event = get_object_or_404(Event, id=event_id)
+            if not ticket:
+                return Response(
+                    {"error": "You may only leave feedback after checking in to the event."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
-        # Only attendees with a USED ticket can submit feedback
-        ticket = Ticket.objects.filter(
-            event=event, 
-            user=self.request.user, 
-            status='used'
-        ).first()
+            # Check for duplicate feedback
+            if EventFeedback.objects.filter(event=event, user=request.user).exists():
+                return Response(
+                    {"error": "You have already provided feedback for this event."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        if not ticket:
-            raise PermissionDenied("You may only leave feedback after checking in to the event.")
+            # Pass the data directly - event will be set in create method
+            serializer = EventFeedbackSerializer(
+                data=request.data, 
+                context={
+                    'request': request,
+                    'view': self  # Pass the view for accessing kwargs
+                }
+            )
+            
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check for duplicate feedback
-        if EventFeedback.objects.filter(event=event, user=self.request.user).exists():
-            raise PermissionDenied("You have already provided feedback for this event.")
-
-        serializer.save(event=event)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 # ------------------------------------
 # MY FEEDBACK LIST API

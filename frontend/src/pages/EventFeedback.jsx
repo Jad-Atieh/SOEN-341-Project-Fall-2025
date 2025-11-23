@@ -52,7 +52,9 @@ function EventFeedback() {
 
     setSubmitting(true);
     try {
-      await feedbackService.submitFeedback(eventId, {
+      // CORRECT: Pass single object with event_id
+      await feedbackService.submitFeedback({
+        event_id: eventId,  // This is crucial - matches the API expectation
         rating: rating,
         comment: comment
       });
@@ -60,8 +62,14 @@ function EventFeedback() {
       alert("Thank you for your feedback!");
       navigate("/my-feedback");
     } catch (error) {
-      console.error("Error submitting feedback:", error);
-      alert(error.response?.data?.detail || "Failed to submit feedback. Please try again.");
+      console.error("Full error details:", error);
+      console.error("Error response data:", error.response?.data);
+      
+      if (error.response?.status === 404) {
+        alert("Feedback endpoint not found. Please contact support.");
+      } else {
+        alert(error.response?.data?.detail || "Failed to submit feedback. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }

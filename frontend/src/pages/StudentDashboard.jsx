@@ -110,26 +110,28 @@ function StudentDashboard() {
 
       {/* Feedback Prompt Section - Uses EventsForFeedbackView */}
       {eventsForFeedback.length > 0 && (
-        <div className="feedback-prompt-section">
-          <h3>Events waiting for your feedback!</h3>
-          <p>Share your experience with events you've attended</p>
-          <div className="events-for-feedback-list">
-            {eventsForFeedback.map(event => (
-              <div key={event.id} className="feedback-event-card">
-                <div className="event-info">
-                  <h4>{event.title}</h4>
-                  <span>Attended on {event.date}</span>
+        
+          <div className="feedback-prompt-section">
+            <h3>Events waiting for your feedback!</h3>
+            <p>Share your experience with events you've attended:</p>
+            <div className="events-for-feedback-list">
+              {eventsForFeedback.map(event => (
+                <div key={event.id} className="feedback-event-card">
+                  <div className="event-info">
+                    <h4>{event.title}</h4>
+                    <span>Attended on {event.date}</span>
+                  </div>
+                  <Link 
+                    to={`/feedback/${event.id}`}
+                    className="feedback-btn"
+                  >
+                    Leave Feedback
+                  </Link>
                 </div>
-                <Link 
-                  to={`/feedback/${event.id}`}
-                  className="feedback-btn"
-                >
-                  Leave Feedback
-                </Link>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        
       )}
 
       {/* Search and filter */}
@@ -218,12 +220,12 @@ function StudentDashboard() {
                 </button>
                   {/* Individual event feedback check */}
                   {canProvideFeedback(event.id) && (
-                  <Link 
-                    to={`/feedback/${event.id}`}
+                  <button
+                    onClick={() => window.location.href = `/feedback/${event.id}`}
                     className="feedback-btn-small"
                   >
                     Leave Feedback
-                  </Link>
+                  </button>
                 )}
               </div>
             </div>
