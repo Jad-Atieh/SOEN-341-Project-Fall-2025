@@ -15,6 +15,7 @@ from django.db.models.functions import TruncMonth, Coalesce
 from django.utils.timezone import now
 from rest_framework import generics, permissions, status, exceptions
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
@@ -22,12 +23,16 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Event, Ticket, AuditLog
 from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer)
-from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin)
 from django.db.models import Sum, Count, Q, Value, F, FloatField
+from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin, IsOrganizerOrAdmin)
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.http import HttpResponse
 import csv
+import cv2
+import numpy as np
+import re
+from rest_framework.parsers import MultiPartParser, JSONParser
 
 
 # Get custom user model
@@ -489,52 +494,56 @@ class EventAnalyticsView(APIView):
 # ------------------------------------
 class CheckInTicketView(APIView):
     """
-    Allows an organizer or admin to check in an attendee using the QR code.
+    Allows an organizer or admin to check in an attendee using the QR code string.
     Marks the ticket as 'used' and records the check-in time.
     """
     permission_classes = [IsAuthenticated, IsOrganizer | IsAdmin]
+    parser_classes = [JSONParser]  
 
     def post(self, request):
-        qr_code = request.data.get("qr_code")
-
+        qr_code = request.data.get("qr_code") 
         if not qr_code:
-            return Response({"error": "QR code is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "QR code is required."}, status=400)
+
+        # Extract ticket ID from QR code string
+        match = re.search(r'ticket_(\d+)_user_\d+_event_\d+', qr_code)
+        if not match:
+            return Response({"error": "Invalid QR code format."}, status=400)
+
+        ticket_id = int(match.group(1))
 
         try:
-            ticket = Ticket.objects.get(qr_code=qr_code)
+            ticket = Ticket.objects.get(id=ticket_id)
         except Ticket.DoesNotExist:
-            return Response({"error": "Invalid QR code."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Ticket not found."}, status=404)
 
-        # Only event organizer or admin can check in
-        if request.user != ticket.event.organizer:
+        # Only organizer or admin can check in
+        if request.user != ticket.event.organizer and not request.user.role == "admin":
             return Response(
                 {"error": "You are not authorized to check in attendees for this event."},
-                status=status.HTTP_403_FORBIDDEN,
+                status=403,
             )
 
-
         if ticket.status == "used":
-            return Response({"message": "This ticket has already been used."}, status=status.HTTP_200_OK)
+            return Response({"message": "This ticket has already been used."}, status=200)
 
         ticket.status = "used"
         ticket.used_at = timezone.now()
         ticket.save()
 
-        return Response(
-            {
-                "message": "Ticket successfully checked in.",
-                "user": ticket.user.name,
-                "event": ticket.event.title,
-                "checked_in_at": ticket.used_at,
-            },
-            status=status.HTTP_200_OK,
-        )
+        return Response({
+            "message": "Ticket successfully checked in.",
+            "user": ticket.user.name,
+            "event": ticket.event.title,
+            "checked_in_at": ticket.used_at,
+        }, status=200)
+
 
 # ------------------------------------
 # Export Tickets as CSV
 # ------------------------------------
 class ExportTicketsCSVView(APIView):
-    permission_classes = [IsAdminUser]  # only admin/staff
+    permission_classes = [IsOrganizerOrAdmin]  # only admin or organizer
 
     def get(self, request, event_id):
         tickets = Ticket.objects.filter(event_id=event_id).select_related('user', 'event')
@@ -819,3 +828,39 @@ class GlobalAnalyticsView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+# ------------------------------------
+# EVENT TICKETS DATA VIEW
+# ------------------------------------
+class EventTicketsDataView(APIView):
+
+    permission_classes = [IsOrganizerOrAdmin]  # only organizer or admin
+
+    def get(self, request, event_id):
+        tickets = Ticket.objects.filter(event_id=event_id).select_related('user', 'event')
+
+        # Build JSON data
+        ticket_data = []
+        for t in tickets:
+            ticket_data.append({
+                "student_name": t.user.name,
+                "student_email": t.user.email,
+                "event_title": t.event.title,
+                "status": t.status,
+                "claimed_at": t.claimed_at,
+                "used_at": t.used_at or None,
+            })
+
+
+        summary = {
+            "total_tickets": tickets.count(),
+            "claimed_tickets": tickets.filter(status__in=['active', 'used']).count(),
+            "used_tickets": tickets.filter(status='used').count(),
+            "capacity_left": t.event.capacity - tickets.count() if t.event.capacity else 0,
+        }
+
+        return Response({
+            "event_id": event_id,
+            "event_title": tickets.first().event.title if tickets.exists() else None,
+            "summary": summary,
+            "tickets": ticket_data
+        }, status=200)

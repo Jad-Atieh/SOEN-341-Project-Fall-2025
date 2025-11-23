@@ -151,9 +151,9 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['is_active']
 
 
-# -------------------------------
+# ---------------------------------------------------
 # TOKEN SERIALIZER WITH EXTRA CLAIMS (role and name)
-# -------------------------------
+# ---------------------------------------------------
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
