@@ -779,6 +779,52 @@ class GlobalAnalyticsView(APIView):
             "generated_at": timezone.now(),
         }
 
+        # ------------------------------------
+        # MONTHLY GRAPH DATA (USERS / EVENTS / TICKETS)
+        # ------------------------------------
+        # Users created per month
+        users_by_month = (
+            User.objects.annotate(month=TruncMonth('created_at'))
+            .values('month')
+            .annotate(count=Count('id'))
+            .order_by('month')
+        )
+
+        # Events created per month
+        events_by_month = (
+            Event.objects.annotate(month=TruncMonth('created_at'))
+            .values('month')
+            .annotate(count=Count('id'))
+            .order_by('month')
+        )
+
+        # Tickets claimed per month
+        tickets_by_month = (
+            Ticket.objects.annotate(month=TruncMonth('claimed_at'))
+            .values('month')
+            .annotate(count=Count('id'))
+            .order_by('month')
+        )
+
+        # Collect all months present in any dataset (formatted as 'May', 'Jun', etc.)
+        all_months = sorted(list({
+            *(u['month'].strftime("%b") for u in users_by_month),
+            *(e['month'].strftime("%b") for e in events_by_month),
+            *(t['month'].strftime("%b") for t in tickets_by_month),
+        }))
+
+        monthly_graph = []
+        for m in all_months:
+            monthly_graph.append({
+                "month": m,
+                "users": next((u['count'] for u in users_by_month if u['month'].strftime("%b") == m), 0),
+                "events": next((e['count'] for e in events_by_month if e['month'].strftime("%b") == m), 0),
+                "tickets": next((t['count'] for t in tickets_by_month if t['month'].strftime("%b") == m), 0),
+            })
+
+        # Attach graph data to existing payload
+        data["monthly_graph"] = monthly_graph
+
         return Response(data, status=status.HTTP_200_OK)
 
 
