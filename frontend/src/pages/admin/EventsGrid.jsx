@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { adminApi } from "./adminApi";
-import Table from "../../components/Table";
-
+import AdminTable from "./AdminTable";
 const EventsGrid = ({ search }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,31 +19,35 @@ const EventsGrid = ({ search }) => {
       });
   }, []);
 
-  // Handle remove after approve/reject
-  const handleAction = (id) => {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-  };
-
-  // Approve event
   const approveEvent = async (event) => {
     try {
       await adminApi.approveEvent(event.id);
-      handleAction(event.id);
+
+      // Update local state
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === event.id ? { ...e, status: "approved" } : e
+        )
+      );
     } catch (error) {
       console.error("Error approving event:", error);
     }
   };
 
-  // Reject event
   const rejectEvent = async (event) => {
     try {
       await adminApi.rejectEvent(event.id);
-      handleAction(event.id);
+
+      // Update local state
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === event.id ? { ...e, status: "rejected" } : e
+        )
+      );
     } catch (error) {
       console.error("Error rejecting event:", error);
     }
   };
-
   // Filter events by search term
   const filtered = events.filter((e) =>
     (e.title?.toLowerCase() || "").includes(search.toLowerCase()) ||
@@ -62,6 +65,7 @@ const EventsGrid = ({ search }) => {
     { header: "Start Time", accessor: "start_time" },
     { header: "Location", accessor: "location" },
     { header: "Tickets Requested", accessor: "capacity" },
+    { header: "Status", accessor: "status" }
   ];
 
   // Map events into table-friendly rows
@@ -76,12 +80,46 @@ const EventsGrid = ({ search }) => {
     { label: "Reject", onClick: rejectEvent, type: "reject" },
   ];
 
+  const getActionsForRow = (row) => {
+    const status = row.status?.toLowerCase();
+
+    if (status === 'approved') {
+      return [
+        {
+          label: "Reject",
+          onClick: () => rejectEvent(row),
+          type: "reject"
+        }
+      ]
+    }
+    if (status === 'rejected') {
+      return [
+        {
+          label: "Approve",
+          onClick: () => approveEvent(row),
+          type: "approve"
+        }
+      ]
+    }
+    if (status === 'pending') {
+      return [
+        { label: "Approve", onClick: () => approveEvent(row), type: "approve" },
+        { label: "Reject", onClick: () => rejectEvent(row), type: "reject" },
+      ];
+    }
+
+  }
+
   return (
     <div className="p-4">
       {filtered.length > 0 ? (
-        <Table columns={columns} data={tableData} actions={actions} />
+        <AdminTable
+          data={tableData}
+          columns={columns}
+          getActions={getActionsForRow}
+        />
       ) : (
-        <p>No pending events to moderate.</p>
+        <p>No events to moderate.</p>
       )}
     </div>
   );

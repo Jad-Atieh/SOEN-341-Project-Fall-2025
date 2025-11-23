@@ -42,7 +42,7 @@ export const adminApi = {
   },
 
   async getGlobalAnalytics() {
-    const response = await axios.get(`${API_URL}/admin/analytics`, {
+    const response = await axios.get(`http://localhost:8000/api/analytics/global`, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -72,4 +72,5 @@ export const adminApi = {
     });
     return response.data;
   },
+
 };
