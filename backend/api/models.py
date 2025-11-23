@@ -249,7 +249,7 @@ class Ticket(models.Model):
     ]
     
     # foreign keys, refer to other models
-    event = models.ForeignKey(Event, on_delete=models.CASCADE) # if event is deleted, delete its tickets too
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='tickets') # if event is deleted, delete its tickets too
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets') # same as for events
     
     # QR code for ticket validation

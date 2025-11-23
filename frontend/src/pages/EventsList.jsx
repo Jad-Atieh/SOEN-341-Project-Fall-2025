@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import api from "../api";
 import Modal from "../components/Modal";
 import "../styles/PageStyle.css";
+import { Link } from "react-router-dom";
 
-function EventList() {
+function EventsList() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -47,12 +48,26 @@ function EventList() {
 
   return (
     <div className="student-dashboard">
+      {/* --------- HEADER --------- */}
       <div className="student-header">
-        <h1>All Events</h1>
-        <p>Browse upcoming events and view details</p>
+        <h1>Welcome to Campus Events!</h1>
+        <p>Explore upcoming activities, workshops, and campus events</p>
       </div>
 
-      {/* Search and filter */}
+      {/* --------- NAVIGATION BUTTONS --------- */}
+      <div className="page-navigation">
+        <Link to="/login" className="nav-button inactive">
+          Login
+        </Link>
+        <Link to="/" className="nav-button active">
+          Events
+        </Link>
+        <Link to="/signup" className="nav-button inactive">
+          Signup
+        </Link>
+      </div>
+
+      {/* --------- SEARCH + FILTER --------- */}
       <div className="search-filter-container">
         <input
           type="text"
@@ -61,7 +76,6 @@ function EventList() {
           placeholder="Search by title, location, category, or organization..."
           className="tickets-search-input"
         />
-
         <div className="filter-container">
           <select value={filter} onChange={(e) => setFilter(e.target.value)}>
             <option value="date">Sort by Date</option>
@@ -71,10 +85,10 @@ function EventList() {
         </div>
       </div>
 
-      {/* Events grid */}
+      {/* --------- EVENTS GRID --------- */}
       <div className="events-grid">
         {filteredEvents.length === 0 ? (
-          <div className="student-no-events">No events available</div>
+          <div className="student-no-events">No events available.</div>
         ) : (
           filteredEvents.map((event) => (
             <div key={event.id} className="event-card-new">
@@ -123,7 +137,7 @@ function EventList() {
         )}
       </div>
 
-      {/* Event Modal */}
+      {/* --------- MODAL --------- */}
       {modalEvent && (
         <Modal
           isOpen={modalOpen}
@@ -181,4 +195,4 @@ function EventList() {
   );
 }
 
-export default EventList;
+export default EventsList;

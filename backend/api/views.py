@@ -703,14 +703,14 @@ class StudentTicketDetailView(generics.RetrieveAPIView):
 # ------------------------------------
 class GlobalAnalyticsView(APIView):
     """
-    Provides global analytics for the admin dashboard.
-
-    Includes:
-      - Total approved users
-      - Total approved events
-      - Total tickets issued
-      - Total revenue (from ticket price * tickets sold)
-      - Monthly graph data for users, tickets, and events
+    Provides global analytics for the entire system.
+    Accessible by:
+      - Admin users only.
+    Returns high-level metrics such as:
+      - Total users by role and status
+      - Event counts by approval status
+      - Ticket statistics
+      - Top events and organizer performance
     """
 
     permission_classes = [IsAuthenticated, IsAdmin]
@@ -718,78 +718,158 @@ class GlobalAnalyticsView(APIView):
     def get(self, request):
         # --- USERS ---
         total_users = User.objects.count()
-        approved_users = User.objects.filter(status='active').count()
+        active_users = User.objects.filter(status='active').count()
+        pending_users = User.objects.filter(status='pending').count()
+        suspended_users = User.objects.filter(status='suspended').count()
+
+        students = User.objects.filter(role='student').count()
+        organizers = User.objects.filter(role='organizer').count()
+        admins = User.objects.filter(role='admin').count()
 
         # --- EVENTS ---
         total_events = Event.objects.count()
         approved_events = Event.objects.filter(status='approved').count()
+        pending_events = Event.objects.filter(status='pending').count()
+        rejected_events = Event.objects.filter(status='rejected').count()
+
+        top_events = (
+            Event.objects.annotate(ticket_count=Count('tickets'))
+            .order_by('-ticket_count')[:5]
+            .values('id', 'title', 'ticket_count', 'category', 'organization')
+        )
 
         # --- TICKETS ---
         total_tickets = Ticket.objects.count()
+        active_tickets = Ticket.objects.filter(status='active').count()
+        used_tickets = Ticket.objects.filter(status='used').count()
+        cancelled_tickets = Ticket.objects.filter(status='cancelled').count()
 
-        # --- REVENUE ---
-        # If Ticket has price or event has ticket_type with price, adjust accordingly
-        revenue = (
-            Ticket.objects.aggregate(total_revenue=Coalesce(Sum('price', output_field=FloatField()), Value(0.0)))["total_revenue"]
-            if hasattr(Ticket, "price")
-            else 0.0
+        # --- ORGANIZER PERFORMANCE ---
+        organizer_performance = (
+            User.objects.filter(role='organizer')
+            .annotate(
+                total_events=Count('events'),
+                approved_event_count=Count('events', filter=Q(events__status='approved')),  # ✅ fixed
+                total_tickets=Count('events__tickets'),
+            )
+            .values('id', 'name', 'email', 'total_events', 'approved_event_count', 'total_tickets')
+            .order_by('-approved_event_count')[:5]
         )
 
-        # --- MONTHLY ANALYTICS ---
-        # group by month for events, users, and tickets
-        monthly_events = (
-            Event.objects.annotate(month=TruncMonth('created_at'))
-            .values('month')
-            .annotate(count=Count('id'))
-            .order_by('month')
-        )
+        data = {
+            "users": {
+                "total": total_users,
+                "active": active_users,
+                "pending": pending_users,
+                "suspended": suspended_users,
+                "by_role": {
+                    "students": students,
+                    "organizers": organizers,
+                    "admins": admins,
+                },
+            },
+            "events": {
+                "total": total_events,
+                "approved": approved_events,
+                "pending": pending_events,
+                "rejected": rejected_events,
+                "top_events": list(top_events),
+            },
+            "tickets": {
+                "total": total_tickets,
+                "active": active_tickets,
+                "used": used_tickets,
+                "cancelled": cancelled_tickets,
+            },
+            "organizer_performance": list(organizer_performance),
+            "generated_at": timezone.now(),
+        }
 
-        monthly_users = (
+        # ------------------------------------
+        # MONTHLY GRAPH DATA (USERS / EVENTS / TICKETS)
+        # ------------------------------------
+        # Users created per month
+        users_by_month = (
             User.objects.annotate(month=TruncMonth('created_at'))
             .values('month')
             .annotate(count=Count('id'))
             .order_by('month')
         )
 
-        monthly_tickets = (
+        # Events created per month
+        events_by_month = (
+            Event.objects.annotate(month=TruncMonth('created_at'))
+            .values('month')
+            .annotate(count=Count('id'))
+            .order_by('month')
+        )
+
+        # Tickets claimed per month
+        tickets_by_month = (
             Ticket.objects.annotate(month=TruncMonth('claimed_at'))
             .values('month')
             .annotate(count=Count('id'))
             .order_by('month')
         )
 
-        # merge all 3 series into one monthly dataset
-        months = sorted(
-            set([m['month'].strftime("%b") for m in monthly_users] +
-                [m['month'].strftime("%b") for m in monthly_events] +
-                [m['month'].strftime("%b") for m in monthly_tickets])
-        )
+        # Collect all months present in any dataset (formatted as 'May', 'Jun', etc.)
+        all_months = sorted(list({
+            *(u['month'].strftime("%b") for u in users_by_month),
+            *(e['month'].strftime("%b") for e in events_by_month),
+            *(t['month'].strftime("%b") for t in tickets_by_month),
+        }))
 
-        monthly_data = []
-        for m in months:
-            monthly_data.append({
+        monthly_graph = []
+        for m in all_months:
+            monthly_graph.append({
                 "month": m,
-                "users": next((x['count'] for x in monthly_users if x['month'].strftime("%b") == m), 0),
-                "events": next((x['count'] for x in monthly_events if x['month'].strftime("%b") == m), 0),
-                "tickets": next((x['count'] for x in monthly_tickets if x['month'].strftime("%b") == m), 0),
+                "users": next((u['count'] for u in users_by_month if u['month'].strftime("%b") == m), 0),
+                "events": next((e['count'] for e in events_by_month if e['month'].strftime("%b") == m), 0),
+                "tickets": next((t['count'] for t in tickets_by_month if t['month'].strftime("%b") == m), 0),
             })
 
-        # --- RESPONSE ---
-        data = {
-            "summary": {
-                "total_users": total_users,
-                "approved_users": approved_users,
-                "total_events": total_events,
-                "approved_events": approved_events,
-                "tickets_issued": total_tickets,
-                "revenue": revenue,
-            },
-            "monthly_graph": monthly_data,
-            "generated_at": now(),
-        }
+        # Attach graph data to existing payload
+        data["monthly_graph"] = monthly_graph
 
         return Response(data, status=status.HTTP_200_OK)
 
+
+# ------------------------------------
+# EVENT TICKETS DATA VIEW
+# ------------------------------------
+class EventTicketsDataView(APIView):
+
+    permission_classes = [IsOrganizerOrAdmin]  # only organizer or admin
+
+    def get(self, request, event_id):
+        tickets = Ticket.objects.filter(event_id=event_id).select_related('user', 'event')
+
+        # Build JSON data
+        ticket_data = []
+        for t in tickets:
+            ticket_data.append({
+                "student_name": t.user.name,
+                "student_email": t.user.email,
+                "event_title": t.event.title,
+                "status": t.status,
+                "claimed_at": t.claimed_at,
+                "used_at": t.used_at or None,
+            })
+
+
+        summary = {
+            "total_tickets": tickets.count(),
+            "claimed_tickets": tickets.filter(status__in=['active', 'used']).count(),
+            "used_tickets": tickets.filter(status='used').count(),
+            "capacity_left": t.event.capacity - tickets.count() if t.event.capacity else 0,
+        }
+
+        return Response({
+            "event_id": event_id,
+            "event_title": tickets.first().event.title if tickets.exists() else None,
+            "summary": summary,
+            "tickets": ticket_data
+        }, status=200)
 
 # ------------------------------------
 # CAN PROVIDE FEEDBACK CHECK API

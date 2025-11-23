@@ -52,7 +52,7 @@ function OrganizerDashboard() {
     { header: "End Time", accessor: "end_time" },
     { header: "Location", accessor: "location" },
     { header: "Capacity", accessor: "capacity" },
-    { header: "Ticket Type", accessor: "ticket_type" }, // added ticket type
+    { header: "Ticket Type", accessor: "ticket_type" },
     { header: "Status", accessor: "approval_status" },
   ];
 
@@ -99,26 +99,37 @@ function OrganizerDashboard() {
     },
   ];
 
-  if (loading) return <p>Loading events...</p>;
+  if (loading) return <p className="student-loading">Loading events...</p>;
 
   return (
     <div className="organizer-dashboard">
-      <div className="organizer-header">
+      {/* --------- HEADER --------- */}
+      <div className="student-header">
         <h1>Organizer Dashboard</h1>
-        <p>
-          Manage your events below
-        </p>
+        <p>Manage your events below</p>
       </div>
 
-      {/* Top Buttons */}
-      <div className="organizer-buttons">
-        <Link to="/create-event"><button>Create Event</button></Link>
-        <Link to="/organizer/analytics"><button>Analytics</button></Link>
-        <Link to="/organizer/checkin"><button>QR Check-in</button></Link>
-        <Link to="/organizer/feedback"><button>Event Feedback</button></Link>
+      {/* --------- NAVIGATION BUTTONS --------- */}
+      <div className="page-navigation">
+          <Link to="/organizer" className="nav-button active">
+              Events
+          </Link>
+          <Link to="/create-event" className="nav-button inactive">
+            Create Event
+          </Link>
+          <Link to="/organizer/analytics" className="nav-button inactive">
+            Analytics
+          </Link>
+          <Link to="/organizer/checkin" className="nav-button inactive">
+            QR Check-in
+          </Link>
+          <Link to="/organizer/feedback" className="nav-button inactive">
+            Event Feedback
+          </Link>
+
       </div>
 
-      {/* Search + Filter */}
+      {/* --------- SEARCH + FILTER --------- */}
       <div className="search-filter-container">
         <input
           type="text"
@@ -139,13 +150,9 @@ function OrganizerDashboard() {
         </div>
       </div>
 
-      {/* Events Table */}
+      {/* --------- EVENTS TABLE --------- */}
       {filteredEvents.length > 0 ? (
-        <Table
-          columns={columns}
-          data={filteredEvents}
-          actions={actions} 
-        />
+        <Table columns={columns} data={filteredEvents} actions={actions} />
       ) : (
         <div className="organizer-no-events">No events match your search/filter.</div>
       )}
