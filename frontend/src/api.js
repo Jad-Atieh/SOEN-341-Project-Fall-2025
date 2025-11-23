@@ -41,6 +41,11 @@ export const feedbackService = {
   getMyFeedback: () => 
     api.get('/api/my-feedback/'),
     
+  // Get all feedback for events owned by the current organizer
+  // Accepts optional params: { order: 'newest'|'oldest', event: <event_id> }
+  getOrganizerFeedback: (params = {}) =>
+    api.get('/api/organizer/feedback/', { params }),
+
   // Get events available for feedback
   getEventsForFeedback: () =>
     api.get('/api/events-for-feedback/'),
