@@ -22,9 +22,7 @@ const AdminDashboard = () => {
       {/* Organizer Approval */}
       {active === "Organizer Approval" && (
         <div className="content-block">
-          <h2 className="section-title">
-            👤 Pending organizer applications
-          </h2>
+          <h1>👤Users</h1>
           <SearchBar
             value={search}
             onChange={setSearch}
@@ -37,7 +35,7 @@ const AdminDashboard = () => {
       {/* Event Moderation */}
       {active === "Event Moderation" && (
         <div className="content-block">
-          <h2 className="section-title">📅 Pending events</h2>
+          <h1>📅 Events</h1>
           <SearchBar
             value={search}
             onChange={setSearch}
@@ -48,7 +46,9 @@ const AdminDashboard = () => {
       )}
 
       {active === "Global Analytics" && (
-        <GlobalAnalytics />
+        <div className="content-block">
+          <GlobalAnalytics search={search} />
+        </div>
       )}
     </div>
   );
