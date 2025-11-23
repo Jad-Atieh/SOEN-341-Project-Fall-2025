@@ -990,11 +990,12 @@ class EventsForFeedbackView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         
-        # Get events where user has used tickets - use the correct related name
+        # Get events where user has used tickets
         events_with_used_tickets = Event.objects.filter(
-            ticket__user=user,  # Use 'ticket' (the field name) not 'tickets'
-            ticket__status='used'
+            tickets__user=user,
+            tickets__status='used'
         ).distinct()
+
         
         # Exclude events where user already provided feedback
         events_with_feedback = Event.objects.filter(
