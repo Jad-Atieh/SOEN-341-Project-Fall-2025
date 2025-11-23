@@ -40,6 +40,7 @@ from .views import (
     CanProvideFeedbackView,
     MyFeedbackListView,
     EventsForFeedbackView,
+    OrganizerFeedbackListView,
 )
 
 
@@ -163,5 +164,6 @@ urlpatterns = [
     path('events/<int:event_id>/feedback/', EventFeedbackView.as_view(), name='event-feedback'),
     path('my-feedback/', MyFeedbackListView.as_view(), name='my-feedback'),
     path('events-for-feedback/', EventsForFeedbackView.as_view(), name='events-for-feedback'),
+    path('organizer/feedback/', views.OrganizerFeedbackListView.as_view(), name='organizer-feedback'),
 
 ]

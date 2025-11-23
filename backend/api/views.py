@@ -923,3 +923,41 @@ class EventsForFeedbackView(generics.ListAPIView):
         
         return events_with_used_tickets.exclude(id__in=events_with_feedback)
 
+# ------------------------------------
+# ORGANIZER FEEDBACK VIEW
+# ------------------------------------
+class OrganizerFeedbackListView(generics.ListAPIView):
+    """
+    Return all EventFeedback objects for events that belong to
+    the currently authenticated organizer.
+
+    Query params supported (optional):
+      - order=newest | oldest    (default newest)
+      - event=<event_id>         (filter by a specific event)
+    """
+    serializer_class = EventFeedbackSerializer
+    permission_classes = [IsAuthenticated]  # or [IsOrganizer] if you want to restrict to organizers only
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # Base queryset: feedback on events this user organizes
+        qs = EventFeedback.objects.filter(event__organizer=user).select_related('event', 'user')
+
+        # Optional filtering by event id
+        event_id = self.request.query_params.get('event')
+        if event_id:
+            try:
+                qs = qs.filter(event__id=int(event_id))
+            except ValueError:
+                pass
+
+        # Optional ordering
+        order = self.request.query_params.get('order', 'newest')
+        if order == 'oldest':
+            qs = qs.order_by('created_at')
+        else:
+            # default newest
+            qs = qs.order_by('-created_at')
+
+        return qs
