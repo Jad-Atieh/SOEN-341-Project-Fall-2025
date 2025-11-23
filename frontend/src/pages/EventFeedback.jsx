@@ -52,9 +52,8 @@ function EventFeedback() {
 
     setSubmitting(true);
     try {
-      // CORRECT: Pass single object with event_id
       await feedbackService.submitFeedback({
-        event_id: eventId,  // This is crucial - matches the API expectation
+        event_id: eventId, 
         rating: rating,
         comment: comment
       });
@@ -87,7 +86,7 @@ function EventFeedback() {
     <div className="student-dashboard">
       <div className="student-header">
         <h1>Leave Feedback</h1>
-        <p>Share your experience with this event</p>
+        <p>Your feedback helps us improve future events!</p>
       </div>
 
       <div className="page-navigation">

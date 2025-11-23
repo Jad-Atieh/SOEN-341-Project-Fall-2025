@@ -115,6 +115,7 @@ function OrganizerDashboard() {
         <Link to="/create-event"><button>Create Event</button></Link>
         <Link to="/organizer/analytics"><button>Analytics</button></Link>
         <Link to="/organizer/checkin"><button>QR Check-in</button></Link>
+        <Link to="/organizer/feedback"><button>Event Feedback</button></Link>
       </div>
 
       {/* Search + Filter */}

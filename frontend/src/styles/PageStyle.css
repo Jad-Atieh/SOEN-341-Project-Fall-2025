@@ -913,6 +913,159 @@
   font-size: 1.1rem;
 }
 
+.feedback-form {
+  width: 100%;
+  max-width: 700px;   
+  margin: 0 auto;     
+}
+
+
+.form-section {
+  width: 100%;
+  text-align: left;
+}
+
+.comment-textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.character-count {
+  text-align: right;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.organizer-feedback-controls {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.organizer-nav-btn {
+  background: #5d2e8c;
+  color: white;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.organizer-nav-btn:hover {
+  background: #4b2171;
+}
+
+.organizer-select {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #5B2C6F;
+  margin-bottom: 0.3rem;
+  font-size: 0.95rem;
+  display: block;
+}
+
+.feedback-card-organizer {
+  flex-direction: column !important;
+  gap: 1rem;
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+
+.feedback-header h3 {
+  color: #5B2C6F;
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.feedback-rating-block {
+  text-align: right;
+}
+
+.rating-number {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.rating-date {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.feedback-body {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+}
+
+.feedback-comment {
+  flex: 1;
+  color: #333;
+  line-height: 1.4;
+}
+
+.feedback-user {
+  min-width: 150px;
+  text-align: right;
+}
+
+.feedback-username {
+  font-weight: 600;
+  color: #5B2C6F;
+}
+
+/* Organizer Feedback Filters */
+.organizer-feedback-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  padding: 0 1rem;
+  gap: 2rem;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #5B2C6F;
+}
+
+.status-filter {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+
 /* Star Rating Styles */
 .star-rating {
   display: flex;

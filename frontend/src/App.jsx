@@ -24,6 +24,7 @@ import PublicRoute from "./components/PublicRoute";
 import StudentTickets from "./pages/StudentTickets";
 import EventFeedback from './pages/EventFeedback';
 import MyFeedback from "./pages/MyFeedback";
+import OrganizerFeedback from "./pages/OrganizerFeedback";
 
 // logout function
 function Logout() {
@@ -88,6 +89,8 @@ function Navbar() {
          <Link to="/organizer/analytics">Analytics</Link> {"  "}
          <Link to="/organizer/checkin">Check-in</Link> {"  "}
          <Link to="/create-event">Create Event</Link> {"  "}
+         <Link to="/organizer/feedback">Event Feedback</Link> {"  "}
+
          <button onClick={handleLogout} className="button-style">Sign Out</button>
        </>
      )}
@@ -150,6 +153,10 @@ function App() {
        <Route path="/organizer/checkin" element={
          <ProtectedRoute roles={["organizer"]}><OrganizerCheckin /></ProtectedRoute>
        } />
+       <Route path="/organizer/feedback" element={
+         <ProtectedRoute roles={["organizer"]}><OrganizerFeedback /></ProtectedRoute>
+       } />
+
 
        {/* Shared Routes */}
        <Route path="/create-event" element={
