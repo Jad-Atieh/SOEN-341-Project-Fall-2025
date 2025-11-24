@@ -92,6 +92,9 @@ function OrganizerCheckin() {
         <Link to="/organizer/checkin" className="nav-button active">
           QR Check-in
         </Link>
+        <Link to="/organizer/feedback" className="nav-button inactive">
+          Event Feedback
+        </Link>
       </div>
 
       {/* QR Check-in Card */}

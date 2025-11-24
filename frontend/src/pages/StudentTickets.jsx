@@ -69,6 +69,9 @@ function StudentTickets() {
         <Link to="/student/tickets" className="nav-button active">
           My Tickets
         </Link>
+        <Link to="/my-feedback" className="nav-button inactive">
+          My Feedback
+        </Link>
       </div>
 
       {/* Using the exact same search-filter container from dashboard */}

@@ -17,6 +17,10 @@ import StudentDashboard from "./pages/StudentDashboard";
 import StudentTickets from "./pages/StudentTickets";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import EventFeedback from "./pages/EventFeedback";
+import MyFeedback from "./pages/MyFeedback";
+import OrganizerFeedback from "./pages/OrganizerFeedback";
+
 
 // Logout function
 function Logout() {
@@ -105,6 +109,13 @@ function App() {
         <Route path="/student/tickets" element={
           <ProtectedRoute roles={["student"]}><StudentTickets /></ProtectedRoute>
         } />
+        <Route path="/feedback/:eventId" element={
+          <ProtectedRoute roles={["student"]}><EventFeedback /></ProtectedRoute>
+        } />
+        <Route path="/my-feedback" element={
+          <ProtectedRoute roles={["student"]}><MyFeedback /></ProtectedRoute>
+        } />
+
 
         {/* Organizer Routes */}
         <Route path="/organizer" element={
@@ -116,6 +127,10 @@ function App() {
         <Route path="/organizer/checkin" element={
           <ProtectedRoute roles={["organizer"]}><OrganizerCheckin /></ProtectedRoute>
         } />
+        <Route path="/organizer/feedback" element={
+          <ProtectedRoute roles={["organizer"]}><OrganizerFeedback /></ProtectedRoute>
+        } />
+
 
         {/* Shared Routes */}
         <Route path="/create-event" element={

@@ -189,6 +189,12 @@ class Event(models.Model):
     def __str__(self):
         """Readable representation of the event."""
         return f"{self.title} ({self.status})"
+    
+    def average_rating(self):
+        feedbacks = self.feedbacks.all()
+        if not feedbacks.exists():
+            return None
+        return round(sum(f.rating for f in feedbacks) / feedbacks.count(), 1)
 
 # ============================================================
 # AUDIT MODEL
@@ -348,3 +354,23 @@ class Ticket(models.Model):
         db_table = 'tickets'
         ordering = ['-claimed_at'] # newest tickets first
         unique_together = ('event', 'user')
+
+# ============================================================
+# EVENT FEEDBACK MODEL
+# ============================================================
+class EventFeedback(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="feedbacks")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE, related_name="feedback", null=True, blank=True)
+    rating = models.IntegerField(
+        choices=[(1, '1 Star'), (2, '2 Stars'), (3, '3 Stars'), (4, '4 Stars'), (5, '5 Stars')],
+        default=5
+    )
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("event", "user")  # One feedback per user per event
+
+    def __str__(self):
+        return f"{self.user.name} - {self.event.title} - {self.rating}/5"

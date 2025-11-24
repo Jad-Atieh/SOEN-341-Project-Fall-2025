@@ -107,6 +107,7 @@ function OrganizerAnalytics() {
         <Link to="/create-event" className="nav-button inactive">Create Event</Link>
         <Link to="/organizer/analytics" className="nav-button active">Analytics</Link>
         <Link to="/organizer/checkin" className="nav-button inactive">QR Check-in</Link>
+        <Link to="/organizer/feedback" className="nav-button inactive">Event Feedback</Link>
       </div>
 
       {/* Overall Stats Cards */}

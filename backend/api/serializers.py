@@ -10,8 +10,9 @@ They serve two main purposes:
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import User, Event, Ticket
+from .models import User, Event, Ticket, EventFeedback
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.shortcuts import get_object_or_404
 
 # Get the custom User model
 User = get_user_model()
@@ -68,10 +69,14 @@ class EventSerializer(serializers.ModelSerializer):
 
     organizer = serializers.StringRelatedField(read_only=True)  # Show organizer name instead of ID
     approved_by = serializers.StringRelatedField(read_only=True)
+    average_rating = serializers.FloatField(read_only=True) # average rating of the event
     class Meta:
         model = Event
         fields = '__all__'
-        read_only_fields = ['organizer', 'created_at', "approved_by", "approved_at"]
+        read_only_fields = ['organizer', 'created_at', "approved_by", "approved_at", "average_rating"]
+
+    def get_average_rating(self, obj):
+        return obj.average_rating()
 
 # -------------------------------
 # TICKET SERIALIZER
@@ -164,3 +169,71 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['name'] = user.name
 
         return token
+
+
+# -------------------------------
+# EVENT FEEDBACK SERIALIZER
+# -------------------------------
+class EventFeedbackSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    event_title = serializers.CharField(source='event.title', read_only=True)
+    
+    class Meta:
+        model = EventFeedback
+        fields = ["id", "event", "user", "user_name", "ticket", "event_title", "rating", "comment", "created_at"]
+        read_only_fields = ["event", "user", "created_at"]  # Add event to read_only
+
+    def validate(self, data):
+        """
+        Validate that user can provide feedback for this event
+        """
+        request = self.context.get('request')
+        # Get event from context instead of data since it's read-only
+        event_id = self.context.get('view').kwargs.get('event_id')
+        event = get_object_or_404(Event, id=event_id)
+
+        if request and request.method == 'POST':
+            # Check if user has a used ticket for this event
+            if not Ticket.objects.filter(
+                event=event, 
+                user=request.user, 
+                status='used'
+            ).exists():
+                raise serializers.ValidationError(
+                    "You can only provide feedback for events you have attended."
+                )
+
+            # Check for duplicate feedback
+            if EventFeedback.objects.filter(event=event, user=request.user).exists():
+                raise serializers.ValidationError(
+                    "You have already provided feedback for this event."
+                )
+
+        return data
+
+    def create(self, validated_data):
+        """
+        Automatically set the user and event from the context
+        """
+        request = self.context.get('request')
+        view = self.context.get('view')
+        event_id = view.kwargs.get('event_id')
+        event = get_object_or_404(Event, id=event_id)
+        
+        if request and request.user.is_authenticated:
+            validated_data['user'] = request.user
+            validated_data['event'] = event
+            
+            # Try to find the user's used ticket for this event
+            try:
+                ticket = Ticket.objects.get(
+                    event=event, 
+                    user=request.user, 
+                    status='used'
+                )
+                validated_data['ticket'] = ticket
+            except Ticket.DoesNotExist:
+                # Ticket is optional
+                pass
+        
+        return super().create(validated_data)

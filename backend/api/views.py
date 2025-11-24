@@ -11,16 +11,21 @@ Each class below corresponds to a specific API endpoint and defines:
 """
 
 from django.contrib.auth import get_user_model
+
+from django.utils import timezone
+from rest_framework import generics, permissions, status, exceptions, authentication
 from django.db.models.functions import TruncMonth, Coalesce
 from django.utils.timezone import now
-from rest_framework import generics, permissions, status, exceptions
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
-
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
+from .models import User, Event, Ticket, AuditLog, EventFeedback
+from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer, EventFeedbackSerializer)
+from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOrAdmin)
+from django.db.models import Count, Q
 from .models import User, Event, Ticket, AuditLog
 from .serializers import (RegisterSerializer, UserSerializer, EventSerializer, TicketSerializer, MyTokenObtainPairSerializer)
 from django.db.models import Sum, Count, Q, Value, F, FloatField
@@ -28,6 +33,7 @@ from .permissions import (IsAdmin,IsOrganizer, IsStudent, IsStudentOrOrganizerOr
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.http import HttpResponse
+from django.core.exceptions import PermissionDenied
 import csv
 import cv2
 import numpy as np
@@ -864,3 +870,175 @@ class EventTicketsDataView(APIView):
             "summary": summary,
             "tickets": ticket_data
         }, status=200)
+
+# ------------------------------------
+# CAN PROVIDE FEEDBACK CHECK API
+# ------------------------------------
+class CanProvideFeedbackView(APIView):
+    """
+    Check if user can provide feedback for a specific event
+    Returns: {can_provide_feedback: boolean, ticket_id: int|null}
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, event_id):
+        try:
+            # Check if user has a used ticket for this event
+            ticket = Ticket.objects.get(
+                event_id=event_id, 
+                user=request.user, 
+                status='used'
+            )
+            
+            # Check if user already provided feedback
+            has_feedback = EventFeedback.objects.filter(
+                event_id=event_id, 
+                user=request.user
+            ).exists()
+            
+            return Response({
+                'can_provide_feedback': not has_feedback,
+                'ticket_id': ticket.id if not has_feedback else None
+            })
+            
+        except Ticket.DoesNotExist:
+            return Response({
+                'can_provide_feedback': False,
+                'ticket_id': None
+            })
+
+# ------------------------------------
+# EVENT FEEDBACK API
+# ------------------------------------
+class EventFeedbackView(APIView):
+    """
+    Handle event feedback submission
+    POST /api/events/<event_id>/feedback/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, event_id):
+        try:
+            # Get event for permission checks
+            event = get_object_or_404(Event, id=event_id)
+
+            # Check if user has a USED ticket for this event
+            ticket = Ticket.objects.filter(
+                event=event, 
+                user=request.user, 
+                status='used'
+            ).first()
+
+            if not ticket:
+                return Response(
+                    {"error": "You may only leave feedback after checking in to the event."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Check for duplicate feedback
+            if EventFeedback.objects.filter(event=event, user=request.user).exists():
+                return Response(
+                    {"error": "You have already provided feedback for this event."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Pass the data directly - event will be set in create method
+            serializer = EventFeedbackSerializer(
+                data=request.data, 
+                context={
+                    'request': request,
+                    'view': self  # Pass the view for accessing kwargs
+                }
+            )
+            
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+# ------------------------------------
+# MY FEEDBACK LIST API
+# ------------------------------------
+class MyFeedbackListView(generics.ListAPIView):
+    """
+    Get all feedback submitted by the current user
+    """
+    serializer_class = EventFeedbackSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return EventFeedback.objects.filter(user=self.request.user).select_related('event')
+
+# ------------------------------------
+# EVENTS AVAILABLE FOR FEEDBACK
+# ------------------------------------
+class EventsForFeedbackView(generics.ListAPIView):
+    """
+    Get all events that the user can provide feedback for
+    (events where user has used tickets but hasn't provided feedback)
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        
+        # Get events where user has used tickets
+        events_with_used_tickets = Event.objects.filter(
+            tickets__user=user,
+            tickets__status='used'
+        ).distinct()
+
+        
+        # Exclude events where user already provided feedback
+        events_with_feedback = Event.objects.filter(
+            feedbacks__user=user
+        ).distinct()
+        
+        return events_with_used_tickets.exclude(id__in=events_with_feedback)
+
+# ------------------------------------
+# ORGANIZER FEEDBACK VIEW
+# ------------------------------------
+class OrganizerFeedbackListView(generics.ListAPIView):
+    """
+    Return all EventFeedback objects for events that belong to
+    the currently authenticated organizer.
+
+    Query params supported (optional):
+      - order=newest | oldest    (default newest)
+      - event=<event_id>         (filter by a specific event)
+    """
+    serializer_class = EventFeedbackSerializer
+    permission_classes = [IsAuthenticated]  # or [IsOrganizer] if you want to restrict to organizers only
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # Base queryset: feedback on events this user organizes
+        qs = EventFeedback.objects.filter(event__organizer=user).select_related('event', 'user')
+
+        # Optional filtering by event id
+        event_id = self.request.query_params.get('event')
+        if event_id:
+            try:
+                qs = qs.filter(event__id=int(event_id))
+            except ValueError:
+                pass
+
+        # Optional ordering
+        order = self.request.query_params.get('order', 'newest')
+        if order == 'oldest':
+            qs = qs.order_by('created_at')
+        else:
+            # default newest
+            qs = qs.order_by('-created_at')
+
+        return qs
