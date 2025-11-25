@@ -35,7 +35,6 @@ from django.utils import timezone
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 import csv
-import cv2
 import numpy as np
 import re
 from rest_framework.parsers import MultiPartParser, JSONParser
