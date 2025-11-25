@@ -26,5 +26,3 @@ pytz==2025.2
 setuptools==80.9.0
 sqlparse==0.5.3
 tzdata==2025.2
-
-numpy==1.26.4
