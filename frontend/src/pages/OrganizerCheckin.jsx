@@ -1,6 +1,6 @@
 import { useState } from "react";
 import jsQR from "jsqr";
-import api from "../api";
+import api from "../api"; 
 import "../styles/PageStyle.css";
 import { Link } from "react-router-dom";
 
@@ -91,6 +91,9 @@ function OrganizerCheckin() {
         </Link>
         <Link to="/organizer/checkin" className="nav-button active">
           QR Check-in
+        </Link>
+        <Link to="/organizer/feedback" className="nav-button inactive">
+          Event Feedback
         </Link>
       </div>
 

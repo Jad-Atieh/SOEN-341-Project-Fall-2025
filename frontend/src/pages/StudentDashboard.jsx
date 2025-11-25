@@ -1,71 +1,303 @@
 import React, { useState, useEffect } from "react";
-import api from "../api";
-import Table from "../components/Table";
+import api, { feedbackService } from "../api";
+import Modal from "../components/Modal";
+import "../styles/PageStyle.css";
+import { Link } from "react-router-dom"; 
 
 function StudentDashboard() {
   const [events, setEvents] = useState([]);
+  const [tickets, setTickets] = useState([]);
+  const [eventsForFeedback, setEventsForFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("date");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalEvent, setModalEvent] = useState(null);
+
+  const fetchEvents = async () => {
+    try {
+      const res = await api.get("/api/events/");
+      setEvents(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchTickets = async () => {
+    try {
+      const res = await api.get("/api/student/tickets/");
+      setTickets(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchEventsForFeedback = async () => {
+    try {
+      const res = await feedbackService.getEventsForFeedback();
+      console.log("Events available for feedback:", res.data); // Debug log
+      setEventsForFeedback(res.data);
+    } catch (err) {
+      console.error("Error fetching events for feedback:", err);
+    }
+  };
+
+  const fetchData = async () => {
+    await Promise.all([fetchEvents(), fetchTickets(), fetchEventsForFeedback()]);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await api.get("/api/events/"); 
-        setEvents(res.data); 
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEvents();
+    fetchData();
   }, []);
 
-  const columns = [
-    { header: "Title", accessor: "title" },
-    { header: "Date", accessor: "date" },
-    { header: "Start Time", accessor: "start_time" },
-    { header: "End Time", accessor: "end_time" },
-    { header: "Location", accessor: "location" },
-    { header: "Capacity", accessor: "capacity" },
-    { header: "Ticket Type", accessor: "ticket_type" },
-  ];
+  const isClaimed = (eventId) => tickets.some((t) => t.event === eventId);
+  
+  // Check if a specific event can have feedback
+  const canProvideFeedback = (eventId) => 
+    eventsForFeedback.some(event => event.id === eventId);
 
-  const actions = [
-    {
-      label: "Claim Ticket",
-      type: "approve",
-      onClick: async (row) => {
-        try {
-          await api.post("/api/tickets/claim/", { event: row.id });
-          alert(`Ticket claimed for event: ${row.title}`);
-        } catch (err) {
-          console.error(err.response?.data);
-          alert(err.response?.data?.detail || "Failed to claim ticket.");
-        }
-      }
-    },
-    {
-      label: "View Details",
-      type: "info",
-      onClick: (row) => {
-        alert(`Event Details:\n${row.description}`);
-      }
+  const filteredEvents = events
+    .filter((e) => {
+      const term = search.toLowerCase();
+      return (
+        e.title.toLowerCase().includes(term) ||
+        (e.location && e.location.toLowerCase().includes(term)) ||
+        (e.category && e.category.toLowerCase().includes(term)) ||
+        (e.organization && e.organization.toLowerCase().includes(term))
+      );
+    })
+    .sort((a, b) => {
+      if (filter === "date") return new Date(a.date) - new Date(b.date);
+      if (filter === "location") return a.location.localeCompare(b.location);
+      if (filter === "category") return a.category.localeCompare(b.category);
+      return 0;
+    });
+
+  const handleClaim = async (event) => {
+    if (isClaimed(event.id)) return;
+    try {
+      await api.post("/api/tickets/claim/", { event: event.id });
+      await fetchTickets();
+      alert(`Ticket claimed for: ${event.title}`);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.detail || "Failed to claim ticket.");
     }
-  ];
+  };
 
-  if (loading) return <p>Loading events...</p>;
+  if (loading) return <p className="student-loading">Loading events...</p>;
 
-return (
+  return (
     <div className="student-dashboard">
       <div className="student-header">
         <h1>Welcome to your Student Dashboard!</h1>
-        <p>Here are upcoming events you can attend. Click "Claim Ticket" to reserve your spot.</p>
+        <p>Browse events, claim tickets, and share your feedback.</p>
       </div>
-  
-      {events.length > 0 ? (
-        <Table columns={columns} data={events} actions={actions} />
-      ) : (
-        <p className="student-no-events">No upcoming events available.</p>
+
+      {/* Navigation Buttons */}
+      <div className="page-navigation">
+        <Link to="/student" className="nav-button active">
+          All Events
+        </Link>
+        <Link to="/student/tickets" className="nav-button inactive">
+          My Tickets
+        </Link>
+        <Link to="/my-feedback" className="nav-button inactive">
+          My Feedback
+        </Link>
+      </div>
+
+      {/* Feedback Prompt Section - Uses EventsForFeedbackView */}
+      {eventsForFeedback.length > 0 && (
+        
+          <div className="feedback-prompt-section">
+            <h3>Events waiting for your feedback!</h3>
+            <p>Share your experience with events you've attended:</p>
+            <div className="events-for-feedback-list">
+              {eventsForFeedback.map(event => (
+                <div key={event.id} className="feedback-event-card">
+                  <div className="event-info">
+                    <h4>{event.title}</h4>
+                    <span>Attended on {event.date}</span>
+                  </div>
+                  <Link 
+                    to={`/feedback/${event.id}`}
+                    className="feedback-btn"
+                  >
+                    Leave Feedback
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        
+      )}
+
+      {/* Search and filter */}
+      <div className="search-filter-container">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by title, location, category, or organization..."
+          className="tickets-search-input"
+        />
+
+        <div className="filter-container">
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="date">Sort by Date</option>
+            <option value="location">Sort by Location</option>
+            <option value="category">Sort by Category</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Events grid - Uses canProvideFeedback for individual events */}
+      <div className="events-grid">
+        {filteredEvents.length === 0 ? (
+          <div className="student-no-events">No events available.</div>
+        ) : (
+          filteredEvents.map((event) => (
+            <div key={event.id} className="event-card-new">
+              <div className="event-card-header">
+                <h3>{event.title}</h3>
+              </div>
+
+              <div className="event-details-grid">
+                <div className="detail-group">
+                  <span className="detail-label">Organizer</span>
+                  <span className="detail-value">{event.organization}</span>
+                </div>
+                <div className="detail-group">
+                  <span className="detail-label">Date & Time</span>
+                  <span className="detail-value">
+                    {event.date} {event.start_time}
+                  </span>
+                </div>
+                <div className="detail-group">
+                  <span className="detail-label">Location</span>
+                  <span className="detail-value">{event.location}</span>
+                </div>
+                <div className="detail-group">
+                  <span className="detail-label">Capacity</span>
+                  <span className="detail-value">{event.capacity}</span>
+                </div>
+                <div className="detail-group">
+                  <span className="detail-label">Category</span>
+                  <span className="detail-value">{event.category}</span>
+                </div>
+                <div className="detail-group">
+                  <span className="detail-label">Ticket Status</span>
+                  <span className="detail-value">
+                    <strong>{isClaimed(event.id) ? "Claimed ✓" : "Available"}</strong>
+                  </span>
+                </div>
+                <div className="detail-group">
+                  <span className="detail-label">Rating</span>
+                  <span className="detail-value">
+                    {event.average_rating ? `${event.average_rating} ⭐` : "No ratings"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="event-card-actions">
+                <button
+                  onClick={() => handleClaim(event)}
+                  disabled={isClaimed(event.id)}
+                  className="claim-btn"
+                >
+                  {isClaimed(event.id) ? "Ticket Claimed" : "Claim Ticket"}
+                </button>
+                <button
+                  onClick={() => {
+                    setModalEvent(event);
+                    setModalOpen(true);
+                  }}
+                  className="details-btn"
+                >
+                  View Details
+                </button>
+                  {/* Individual event feedback check */}
+                  {canProvideFeedback(event.id) && (
+                  <button
+                    onClick={() => window.location.href = `/feedback/${event.id}`}
+                    className="feedback-btn-small"
+                  >
+                    Leave Feedback
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Event Modal */}
+      {modalEvent && (
+        <Modal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          title={modalEvent.title}
+          actions={[
+            {
+              label: "Close",
+              onClick: () => setModalOpen(false),
+              type: "secondary",
+            },
+            canProvideFeedback(modalEvent.id) && {
+              label: "Leave Feedback", 
+              onClick: () => {
+                setModalOpen(false);
+                window.location.href = `/feedback/${modalEvent.id}`;
+              },
+              type: "primary",
+            },
+          ].filter(Boolean)}
+        >
+          <dl className="modal-body">
+            <div className="modal-row">
+              <dt>Description:</dt>
+              <dd>{modalEvent.description}</dd>
+            </div>
+            <div className="modal-row">
+              <dt>Date:</dt>
+              <dd>{modalEvent.date}</dd>
+            </div>
+            <div className="modal-row">
+              <dt>Start:</dt>
+              <dd>{modalEvent.start_time}</dd>
+            </div>
+            <div className="modal-row">
+              <dt>End:</dt>
+              <dd>{modalEvent.end_time}</dd>
+            </div>
+            <div className="modal-row">
+              <dt>Location:</dt>
+              <dd>{modalEvent.location}</dd>
+            </div>
+            <div className="modal-row">
+              <dt>Capacity:</dt>
+              <dd>{modalEvent.capacity}</dd>
+            </div>
+            <div className="modal-row">
+              <dt>Ticket Type:</dt>
+              <dd>{modalEvent.ticket_type}</dd>
+            </div>
+            <div className="modal-row">
+              <dt>Category:</dt>
+              <dd>{modalEvent.category}</dd>
+            </div>
+            <div className="modal-row">
+              <dt>Organization:</dt>
+              <dd>{modalEvent.organization}</dd>
+            </div>
+            <div className="modal-row">
+              <dt>Average Rating:</dt>
+              <dd>{modalEvent.average_rating ? `${modalEvent.average_rating.toFixed(1)} ⭐` : "No ratings yet"}</dd>
+            </div>
+          </dl>
+        </Modal>
       )}
     </div>
   );

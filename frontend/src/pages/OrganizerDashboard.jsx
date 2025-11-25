@@ -2,16 +2,25 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api";
 import Table from "../components/Table";
+import "../styles/PageStyle.css";
 
 function OrganizerDashboard() {
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const navigate = useNavigate();
 
   const fetchEvents = async () => {
     try {
       const res = await api.get("/api/events/");
-      setEvents(res.data);
+      const mappedEvents = res.data.map((e) => ({
+        ...e,
+        approval_status: e.is_approved ? "Approved" : "Pending",
+      }));
+      setEvents(mappedEvents);
+      setFilteredEvents(mappedEvents);
     } catch (err) {
       console.error(err);
     } finally {
@@ -23,6 +32,19 @@ function OrganizerDashboard() {
     fetchEvents();
   }, []);
 
+  useEffect(() => {
+    let filtered = events;
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((e) => e.approval_status === filterStatus);
+    }
+    if (searchTerm) {
+      filtered = filtered.filter((e) =>
+        e.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    setFilteredEvents(filtered);
+  }, [searchTerm, filterStatus, events]);
+
   const columns = [
     { header: "Title", accessor: "title" },
     { header: "Date", accessor: "date" },
@@ -30,17 +52,15 @@ function OrganizerDashboard() {
     { header: "End Time", accessor: "end_time" },
     { header: "Location", accessor: "location" },
     { header: "Capacity", accessor: "capacity" },
+    { header: "Ticket Type", accessor: "ticket_type" },
     { header: "Status", accessor: "approval_status" },
   ];
 
-  
   const actions = [
     {
       label: "Edit",
       type: "edit",
-      onClick: (row) => {
-        navigate(`/edit-event/${row.id}`);
-      },
+      onClick: (row) => navigate(`/edit-event/${row.id}`),
     },
     {
       label: "Delete",
@@ -49,7 +69,7 @@ function OrganizerDashboard() {
         if (window.confirm(`Are you sure you want to delete "${row.title}"?`)) {
           try {
             await api.delete(`/api/events/${row.id}/`);
-            fetchEvents(); // Refresh table
+            fetchEvents();
           } catch (err) {
             console.error(err);
             alert("Failed to delete event.");
@@ -57,54 +77,85 @@ function OrganizerDashboard() {
         }
       },
     },
+    {
+      label: "Attendees",
+      type: "export",
+      onClick: async (row) => {
+        try {
+          const res = await api.get(`/api/tickets/export/${row.id}/`, {
+            responseType: "blob",
+          });
+          const url = window.URL.createObjectURL(new Blob([res.data]));
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${row.title}-attendees.csv`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        } catch (err) {
+          console.error(err);
+          alert("Failed to export attendees.");
+        }
+      },
+    },
   ];
 
-  const handleExportCSV = () => {
-    if (!events.length) return;
-    const header = columns.map((c) => c.header).join(",");
-    const body = events
-      .map((e) => columns.map((c) => `"${String(e[c.accessor] ?? "")}"`).join(","))
-      .join("\n");
-    const csv = header + "\n" + body;
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "events.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  if (loading) return <p>Loading events...</p>;
+  if (loading) return <p className="student-loading">Loading events...</p>;
 
   return (
     <div className="organizer-dashboard">
-      <div className="organizer-header">
+      {/* --------- HEADER --------- */}
+      <div className="student-header">
         <h1>Organizer Dashboard</h1>
-        <p>
-          Manage your events below. You can export the table as CSV, create new events,
-          view analytics, or manage QR check-ins.
-        </p>
+        <p>Manage your events below</p>
       </div>
 
-      {events.length > 0 ? (
-        <Table columns={columns} data={events} actions={actions} />
+      {/* --------- NAVIGATION BUTTONS --------- */}
+      <div className="page-navigation">
+          <Link to="/organizer" className="nav-button active">
+              Events
+          </Link>
+          <Link to="/create-event" className="nav-button inactive">
+            Create Event
+          </Link>
+          <Link to="/organizer/analytics" className="nav-button inactive">
+            Analytics
+          </Link>
+          <Link to="/organizer/checkin" className="nav-button inactive">
+            QR Check-in
+          </Link>
+          <Link to="/organizer/feedback" className="nav-button inactive">
+            Event Feedback
+          </Link>
+
+      </div>
+
+      {/* --------- SEARCH + FILTER --------- */}
+      <div className="search-filter-container">
+        <input
+          type="text"
+          placeholder="Search events..."
+          className="tickets-search-input"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <div className="filter-container">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">All Statuses</option>
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+          </select>
+        </div>
+      </div>
+
+      {/* --------- EVENTS TABLE --------- */}
+      {filteredEvents.length > 0 ? (
+        <Table columns={columns} data={filteredEvents} actions={actions} />
       ) : (
-        <div className="organizer-no-events">No events available.</div>
+        <div className="organizer-no-events">No events match your search/filter.</div>
       )}
-
-      <div className="organizer-buttons">
-        <Link to="/create-event">
-          <button>Create Event</button>
-        </Link>
-        <button onClick={handleExportCSV}>Export CSV</button>
-        <Link to="/organizer/analytics">
-          <button>Analytics</button>
-        </Link>
-        <Link to="/organizer/checkin">
-          <button>QR Check-in</button>
-        </Link>
-      </div>
     </div>
   );
 }

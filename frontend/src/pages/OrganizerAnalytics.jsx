@@ -1,75 +1,277 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend, LineChart, Line } from "recharts";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import api from "../api";
+import Modal from "../components/Modal";
+import "../styles/PageStyle.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
-
-function readLocalEvents() {
-  try { const raw = localStorage.getItem("draftEvents") || "[]"; const arr = JSON.parse(raw); return Array.isArray(arr) ? arr : []; } catch { return []; }
-}
-
-export default function OrganizerAnalytics() {
-  const [data, setData] = useState(null);
+function OrganizerAnalytics() {
+  const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("date");
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [overallStats, setOverallStats] = useState({
+    totalEvents: 0,
+    totalTickets: 0,
+    checkedInTickets: 0,
+    totalCapacity: 0
+  });
 
   useEffect(() => {
-    let ok = true;
-    fetch(`${API_BASE}/api/analytics`, { credentials: "include" })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(j => { if (ok) setData(j); })
-      .catch(() => {
-        const ev = readLocalEvents();
-        const perEvent = ev.map(e => {
-          const title = e.form?.title || e.title || "Untitled";
-          const cap = Number(e.capacity || 0);
-          const sold = Number(e.taken || 0);
-          const remaining = Math.max(0, cap - sold);
-          return { title, sold, capacity: cap, remaining };
-        });
-        const timeline = ev.map((e, i) => {
-          const d = e.form?.date || e.date || `2025-11-${String(i + 1).padStart(2, "0")}`;
-          const sold = Number(e.taken || 0);
-          return { date: d, sold };
-        });
-        setData({ perEvent, timeline });
-      });
-    return () => { ok = false; };
+    async function fetchEventAnalytics() {
+      try {
+        const res = await api.get("/api/events/");
+        const eventsData = res.data;
+
+        const eventsWithAnalytics = await Promise.all(
+          eventsData.map(async (event) => {
+            try {
+              const analyticsRes = await api.get(`/api/tickets/data/${event.id}/`);
+              return { ...event, analytics: analyticsRes.data };
+            } catch (err) {
+              console.error("Error fetching analytics for event:", event.id, err);
+              return { ...event, analytics: { tickets: [], summary: { total_tickets: 0, used_tickets: 0, capacity_left: 0 } } };
+            }
+          })
+        );
+
+        setEvents(eventsWithAnalytics);
+        setFilteredEvents(eventsWithAnalytics);
+        
+        // Calculate overall stats
+        const stats = eventsWithAnalytics.reduce((acc, event) => {
+          const tickets = event.analytics?.tickets || [];
+          return {
+            totalEvents: acc.totalEvents + 1,
+            totalTickets: acc.totalTickets + tickets.length,
+            checkedInTickets: acc.checkedInTickets + tickets.filter(t => t.status === "used").length,
+            totalCapacity: acc.totalCapacity + (event.capacity || 0)
+          };
+        }, { totalEvents: 0, totalTickets: 0, checkedInTickets: 0, totalCapacity: 0 });
+        
+        setOverallStats(stats);
+      } catch (err) {
+        console.error("Error fetching events:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchEventAnalytics();
   }, []);
 
-  const perEvent = useMemo(() => data?.perEvent || [], [data]);
-  const timeline = useMemo(() => (data?.timeline || []).sort((a,b)=>String(a.date).localeCompare(String(b.date))), [data]);
+  useEffect(() => {
+    let filtered = events.filter((event) =>
+      event.title.toLowerCase().includes(search.toLowerCase())
+    );
+
+    if (filter === "date") {
+      filtered = filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+    } else if (filter === "title") {
+      filtered = filtered.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (filter === "used") {
+      filtered = filtered.sort(
+        (a, b) => (b.analytics?.tickets.filter(t => t.status === "used").length || 0) -
+                  (a.analytics?.tickets.filter(t => t.status === "used").length || 0)
+      );
+    } else if (filter === "capacity") {
+      filtered = filtered.sort((a, b) => (b.capacity || 0) - (a.capacity || 0));
+    }
+
+    setFilteredEvents(filtered);
+  }, [search, filter, events]);
+
+  const openModal = (event) => {
+    setSelectedEvent(event);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedEvent(null);
+    setModalOpen(false);
+  };
+
+  if (loading) return <p className="student-loading">Loading analytics...</p>;
 
   return (
-    <div style={{ maxWidth: 1100, margin: "24px auto", padding: "0 16px", display: "grid", gap: 24 }}>
-      <h1 style={{ margin: 0 }}>Analytics</h1>
+    <div className="organizer-dashboard">
+      <div className="organizer-header">
+        <h1>Event Analytics Dashboard</h1>
+        <p>Comprehensive insights into your event performance and ticket statistics</p>
+      </div>
 
-      <section style={{ height: 320, border: "1px solid #eee", borderRadius: 10, padding: 12 }}>
-        <h3 style={{ margin: "0 0 12px" }}>Tickets per Event</h3>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={perEvent}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="title" interval={0} angle={-15} textAnchor="end" height={70} />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="sold" name="Sold" />
-            <Bar dataKey="capacity" name="Capacity" />
-            <Bar dataKey="remaining" name="Remaining" />
-          </BarChart>
-        </ResponsiveContainer>
-      </section>
+      <div className="page-navigation">
+        <Link to="/organizer" className="nav-button inactive">Events</Link>
+        <Link to="/create-event" className="nav-button inactive">Create Event</Link>
+        <Link to="/organizer/analytics" className="nav-button active">Analytics</Link>
+        <Link to="/organizer/checkin" className="nav-button inactive">QR Check-in</Link>
+        <Link to="/organizer/feedback" className="nav-button inactive">Event Feedback</Link>
+      </div>
 
-      <section style={{ height: 320, border: "1px solid #eee", borderRadius: 10, padding: 12 }}>
-        <h3 style={{ margin: "0 0 12px" }}>Sales Over Time</h3>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={timeline}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="sold" name="Sold" />
-          </LineChart>
-        </ResponsiveContainer>
-      </section>
+      {/* Overall Stats Cards */}
+      <div className="analytics-stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon">📊</div>
+          <div className="stat-content">
+            <h3>{overallStats.totalEvents}</h3>
+            <p>Total Events</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">🎫</div>
+          <div className="stat-content">
+            <h3>{overallStats.totalTickets}</h3>
+            <p>Total Tickets</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">✅</div>
+          <div className="stat-content">
+            <h3>{overallStats.checkedInTickets}</h3>
+            <p>Checked In</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">🏢</div>
+          <div className="stat-content">
+            <h3>{overallStats.totalCapacity}</h3>
+            <p>Total Capacity</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="search-filter-container">
+        <input
+          type="text"
+          placeholder="Search events by title..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="tickets-search-input"
+        />
+        <div className="filter-container">
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="date">Sort by Date</option>
+            <option value="title">Sort by Title</option>
+            <option value="used">Sort by Check-ins</option>
+            <option value="capacity">Sort by Capacity</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="analytics-container">
+        {filteredEvents.length === 0 ? (
+          <div className="organizer-no-events">
+            <p>No events match your search criteria.</p>
+            <p>Try adjusting your search or filter to see more results.</p>
+          </div>
+        ) : (
+          filteredEvents.map(event => {
+            const tickets = event.analytics?.tickets || [];
+            const totalTickets = tickets.length;
+            const usedTickets = tickets.filter(t => t.status === "used").length;
+            const claimedTickets = tickets.filter(t => t.status === "active").length;
+            const availableTickets = event.capacity || 0;
+            const attendanceRate = totalTickets > 0 ? ((usedTickets / totalTickets) * 100).toFixed(1) : 0;
+
+            return (
+              <div key={event.id} className="analytics-card">
+                <div className="analytics-card-header">
+                  <h3>{event.title}</h3>
+                  <span className={`event-status ${usedTickets > 0 ? 'active' : 'upcoming'}`}>
+                    {usedTickets > 0 ? 'Active' : 'Upcoming'}
+                  </span>
+                </div>
+
+                <div className="analytics-content">
+                  <div className="event-details-section">
+                    <div className="detail-row">
+                      <span className="detail-label">Date & Time</span>
+                      <span className="detail-value">{event.date} • {event.start_time} - {event.end_time}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Attendance Rate</span>
+                      <span className="detail-value highlight">{attendanceRate}%</span>
+                    </div>
+                    <div className="stats-grid">
+                      <div className="mini-stat">
+                        <span className="mini-stat-value">{totalTickets}</span>
+                        <span className="mini-stat-label">Total Tickets</span>
+                      </div>
+                      <div className="mini-stat">
+                        <span className="mini-stat-value">{usedTickets}</span>
+                        <span className="mini-stat-label">Checked In</span>
+                      </div>
+                      <div className="mini-stat">
+                        <span className="mini-stat-value">{claimedTickets}</span>
+                        <span className="mini-stat-label">Claimed</span>
+                      </div>
+                      <div className="mini-stat">
+                        <span className="mini-stat-value">{availableTickets}</span>
+                        <span className="mini-stat-label">Capacity</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="analytics-actions">
+                  <button className="details-btn active" onClick={() => openModal(event)}>
+                    📋 View Attendee Details
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <Modal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        title={selectedEvent ? `${selectedEvent.title} - Attendee Details` : ""}
+        size="large"
+      >
+        {selectedEvent && (
+          <div className="attendee-modal-content">
+            <div className="attendee-section">
+              <h4>✅ Checked-in Attendees ({selectedEvent.analytics.tickets.filter(t => t.status === "used").length})</h4>
+              <div className="attendee-list">
+                {selectedEvent.analytics.tickets
+                  .filter(t => t.status === "used")
+                  .map((t, index) => (
+                    <div key={`${t.student_email}-${t.event_title}-used`} className="attendee-item">
+                      <span className="attendee-number">{index + 1}.</span>
+                      <div className="attendee-info">
+                        <span className="attendee-name">{t.student_name}</span>
+                        <span className="attendee-email">{t.student_email}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="attendee-section">
+              <h4>🎫 Claimed Tickets ({selectedEvent.analytics.tickets.filter(t => t.status === "active").length})</h4>
+              <div className="attendee-list">
+                {selectedEvent.analytics.tickets
+                  .filter(t => t.status === "active")
+                  .map((t, index) => (
+                    <div key={`${t.student_email}-${t.event_title}`} className="attendee-item">
+                      <span className="attendee-number">{index + 1}.</span>
+                      <div className="attendee-info">
+                        <span className="attendee-name">{t.student_name}</span>
+                        <span className="attendee-email">{t.student_email}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
+
+export default OrganizerAnalytics;

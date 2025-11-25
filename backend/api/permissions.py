@@ -44,3 +44,17 @@ class IsStudentOrOrganizerOrAdmin(permissions.BasePermission):
                 request.user.is_authenticated
                 and request.user.role in ['student', 'organizer', 'admin']
         )
+    
+class IsOrganizerOrAdmin(permissions.BasePermission):
+    """
+    Permission: Allows access to Admins or Organizers.
+    Organizers can only access their own objects (enforced in the view).
+    """
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role in ['admin', 'organizer']
+
+    # Optional object-level check if you want to enforce per-object rules
+    def has_object_permission(self, request, view, obj):
+        # Admin can access anything; organizers only their own events
+        return request.user.role == 'admin' or (request.user.role == 'organizer' and obj.organizer == request.user)

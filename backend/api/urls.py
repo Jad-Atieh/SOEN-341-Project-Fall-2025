@@ -36,7 +36,14 @@ from .views import (
     student_dashboard,
     StudentTicketDetailView,
     StudentTicketListView,
+    EventTicketsDataView,
+    EventFeedbackView,
+    CanProvideFeedbackView,
+    MyFeedbackListView,
+    EventsForFeedbackView,
+    OrganizerFeedbackListView,
 )
+
 
 urlpatterns = [
     # -------------------------------
@@ -101,6 +108,10 @@ urlpatterns = [
     # Endpoint: GET /api/events/<event_id>/analytics/
     # → Returns analytics for a specific event.
 
+    path('events/<int:event_id>/feedback/', EventFeedbackView.as_view(), name='event-feedback'),
+    # Endpoint: POST /api/events/<event_id>/feedback/
+    # → Allows attendees to submit feedback for an event.
+
     # -------------------------------
     # JWT AUTHENTICATION (LOGIN & TOKEN REFRESH)
     # -------------------------------
@@ -138,5 +149,28 @@ urlpatterns = [
     # -------------------------------
     # DASHBOARD
     # -------------------------------
+    # Endpoint: GET /api/dashboard/student/
     path('dashboard/student/', student_dashboard, name='student-dashboard'),
+
+    # -------------------------------
+    # GLOBAL ANALYTICS
+    # -------------------------------
+    # Endpoint: GET /api/analytics/global/
+    path("analytics/global/", views.GlobalAnalyticsView.as_view(), name="global-analytics"),
+
+    # -------------------------------
+    # EVENT TICKETS DATA
+    # -------------------------------
+    # Endpoint: GET /api/tickets/data/<event_id>/
+    path("tickets/data/<int:event_id>/", EventTicketsDataView.as_view(), name="event-tickets-data"),
+
+    # -------------------------------
+    # EVENT FEEDBACK
+    # -------------------------------
+    path('events/<int:event_id>/can-provide-feedback/', CanProvideFeedbackView.as_view(), name='can-provide-feedback'),
+    path('events/<int:event_id>/feedback/', EventFeedbackView.as_view(), name='event-feedback'),
+    path('my-feedback/', MyFeedbackListView.as_view(), name='my-feedback'),
+    path('events-for-feedback/', EventsForFeedbackView.as_view(), name='events-for-feedback'),
+    path('organizer/feedback/', views.OrganizerFeedbackListView.as_view(), name='organizer-feedback'),
+
 ]

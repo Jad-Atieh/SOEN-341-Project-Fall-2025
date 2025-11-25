@@ -18,6 +18,12 @@ Structure:
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+import qrcode
+from io import BytesIO
+from django.core.files import File
+import os
 
 # ============================================================
 # CUSTOM USER MANAGER
@@ -32,7 +38,7 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         """Create and save a regular user with the given email and password."""
         if not email:
-            raise ValueError('The email field must be filled out.')
+            raise ValueError("The email field must be filled out.")
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)  # Securely hash the password before saving
@@ -45,7 +51,13 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('status', 'active')
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        
+        extra_fields.setdefault('is_active', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
         return self.create_user(email, password, **extra_fields)
 
 # ============================================================
@@ -63,15 +75,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     """
 
     ROLE_CHOICES = [
-        ('student', 'Student'),
-        ('organizer', 'Organizer'),
-        ('admin', 'Admin'),
+        ("student", "Student"),
+        ("organizer", "Organizer"),
+        ("admin", "Admin"),
     ]
-    
+
     STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('pending', 'Pending'),
-        ('suspended', 'Suspended'),
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
     ]
 
     # Core fields
@@ -177,6 +189,12 @@ class Event(models.Model):
     def __str__(self):
         """Readable representation of the event."""
         return f"{self.title} ({self.status})"
+    
+    def average_rating(self):
+        feedbacks = self.feedbacks.all()
+        if not feedbacks.exists():
+            return None
+        return round(sum(f.rating for f in feedbacks) / feedbacks.count(), 1)
 
 # ============================================================
 # AUDIT MODEL
@@ -231,11 +249,11 @@ class Ticket(models.Model):
     ]
     
     # foreign keys, refer to other models
-    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='tickets') # if event is deleted, delete its tickets too
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='tickets') # if event is deleted, delete its tickets too
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets') # same as for events
     
     # QR code for ticket validation
-    qr_code = models.CharField(max_length=255, unique=True, help_text="Unique QR code for ticket validation"    )
+    qr_code = models.ImageField(upload_to='tickets/qr_codes/', blank=True, null=True, help_text="QR code for ticket validation")
     
     # status tracking
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
@@ -244,26 +262,115 @@ class Ticket(models.Model):
     claimed_at = models.DateTimeField(auto_now_add=True) 
     used_at = models.DateTimeField(null=True, blank=True)
     
+    # QR code generation and capacity management
+    def generate_qr_code_data(self):
+        """Generate rich QR code data with user and event information"""
+        return (
+            f"TICKET INFORMATION:\n"
+            f"Ticket ID: {self.id}\n"
+            f"Student: {self.user.name}\n"
+            f"Email: {self.user.email}\n"
+            f"Event: {self.event.title}\n"
+            f"Date: {self.event.date}\n"
+            f"Time: {self.event.start_time} - {self.event.end_time}\n"
+            f"Location: {self.event.location}\n"
+            f"Organization: {self.event.organization}\n"
+            f"Category: {self.event.category}\n"
+            f"Status: {self.status.upper()}\n"
+            f"Claimed: {self.claimed_at.strftime('%Y-%m-%d at %H:%M')}\n"
+            f"Verification: ticket_{self.id}_user_{self.user.id}_event_{self.event.id}"
+        )
+    
+
+    def save(self, *args, **kwargs):
+        """Generate QR code when ticket is created and update event capacity"""
+        is_new = not self.pk  # Check if this is a new ticket
+        
+        if is_new:
+            # Decrease event capacity for new tickets
+            if self.event.capacity > 0:
+                self.event.capacity -= 1
+                self.event.save()
+            else:
+                raise ValidationError("Event is already at full capacity.")
+        
+        # First save to create the ticket and get ID
+        super().save(*args, **kwargs)
+        
+        # Generate QR code after we have an ID (only for new tickets)
+        if is_new and not self.qr_code:
+            # Generate rich QR code data with user and event info
+            qr_data = self.generate_qr_code_data()
+            
+            # Create QR code
+            qr = qrcode.make(qr_data)
+            
+            # Save to buffer
+            buffer = BytesIO()
+            qr.save(buffer, format='PNG')
+            
+            # Create descriptive file name
+            file_name = f"ticket_{self.id}_{self.user.name.replace(' ', '_')}_{self.event.title.replace(' ', '_')}.png"
+            
+            # Save to ImageField
+            self.qr_code.save(file_name, File(buffer), save=False)
+            
+            # Use update to avoid the double save issue
+            Ticket.objects.filter(id=self.id).update(qr_code=self.qr_code.name)
+
+    def delete(self, *args, **kwargs):
+        """Increase event capacity when ticket is deleted/cancelled"""
+        # Increase capacity when ticket is deleted (cancellation)
+        if self.status == 'active':
+            self.event.capacity += 1
+            self.event.save()
+        
+        super().delete(*args, **kwargs)
+    
+    def mark_as_cancelled(self):
+        """Mark ticket as cancelled and increase event capacity"""
+        if self.status == 'active':
+            self.event.capacity += 1  # Free up the spot
+            self.event.save()
+        
+        self.status = 'cancelled'
+        self.save()
+
     def __str__(self):
         """Readable representation of a ticket claim."""
         return f"{self.user.name} → {self.event.title}"
     
     def mark_as_used(self):
-        # mark ticket as used and set used_at timestamp
+        """Mark ticket as used and set used_at timestamp"""
         self.status = 'used'
         self.used_at = timezone.now()
         self.save()
     
-    def mark_as_cancelled(self):
-        # mark ticket as cancelled
-        self.status = 'cancelled'
-        self.save()
-    
     def is_valid(self):
-        # check if ticket is valid
-        return self.status == 'active' and self.event.is_active
+        """Check if ticket is valid"""
+        return self.status == 'active' and self.event.is_approved
     
     class Meta:
         db_table = 'tickets'
         ordering = ['-claimed_at'] # newest tickets first
         unique_together = ('event', 'user')
+
+# ============================================================
+# EVENT FEEDBACK MODEL
+# ============================================================
+class EventFeedback(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="feedbacks")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE, related_name="feedback", null=True, blank=True)
+    rating = models.IntegerField(
+        choices=[(1, '1 Star'), (2, '2 Stars'), (3, '3 Stars'), (4, '4 Stars'), (5, '5 Stars')],
+        default=5
+    )
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("event", "user")  # One feedback per user per event
+
+    def __str__(self):
+        return f"{self.user.name} - {self.event.title} - {self.rating}/5"
