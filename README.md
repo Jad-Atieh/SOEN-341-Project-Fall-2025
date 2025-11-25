@@ -20,3 +20,4 @@ This project is a web application that assists students to create, look for, and
 - TBD
 
 ## Block Diagram
+<img width="4073" height="970" alt="Block_Diagram_SOEN341_" src="https://github.com/user-attachments/assets/c5d872a6-c0f1-4db4-b25a-214abe60bd28" />
