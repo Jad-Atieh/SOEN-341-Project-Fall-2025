@@ -4,8 +4,7 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from api.models import Event, Ticket, User
 import datetime
-import numpy as np
-import cv2
+
 
 # -----------------------------
 # Helper function to create users
