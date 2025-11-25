@@ -20,3 +20,88 @@ This project is a web application that assists students to create, look for, and
 - TBD
 
 ## Block Diagram
+
+'''mermaid
+flowchart TD
+
+%% ========= LAYER 1: USERS =========
+subgraph USERS[Users]
+direction TB
+    STU[Student]
+    ORG[Organizer]
+    ADM[Admin]
+end
+
+
+%% ========= LAYER 2: AUTH =============
+subgraph AUTH[Authentication JWT]
+direction TB
+    AUTHAPI[Login / Register API]
+end
+
+STU --> AUTHAPI
+ORG --> AUTHAPI
+ADM --> AUTHAPI
+
+
+%% ========= LAYER 3: EVENT MANAGEMENT =========
+subgraph EVENTS[Event Management]
+direction TB
+    VE[View Events<br/>GET /events]
+    CE[Create Event<br/>POST /events]
+    UE[Update/Delete Event<br/>PUT /events/:id]
+end
+
+AUTHAPI --> VE
+AUTHAPI --> CE
+AUTHAPI --> UE
+
+ORG --> CE
+ORG --> UE
+STU --> VE
+ADM -->|Approve/Reject| CE
+
+
+%% ========= LAYER 4: STUDENT TICKETS =========
+subgraph STUDENT_FLOW[Student Ticket Flow]
+direction TB
+    SD[Student Dashboard<br/>GET /dashboard/student]
+    CT[Claim Ticket<br/>POST /tickets/claim]
+    MT[My Tickets<br/>GET /tickets/mine]
+    TS[TicketSerializer<br/>Returns QR Code]
+end
+
+STU --> SD
+STU --> CT
+STU --> MT
+
+MT --> TS
+CT -->|Creates Ticket + QR| TBL1
+
+
+%% ========= LAYER 5: ORGANIZER =========
+subgraph ORG_FLOW[Organizer Dashboard]
+direction TB
+    OD[Organizer Dashboard<br/>GET /dashboard/organizer]
+end
+
+ORG --> OD
+
+
+%% ========= LAYER 6: CHECK-IN =========
+subgraph CHECKIN[QR Check-in Flow]
+direction TB
+    SCAN[Scanner App]
+    CHECKINAPI[Check-in API<br/>POST /checkin]
+end
+
+SCAN --> CHECKINAPI
+CHECKINAPI -->|Validate Ticket| TBL1
+CHECKINAPI -->|Check-in Result| SCAN
+
+
+%% ========= LAYER 7: DATABASE =========
+subgraph DATABASE[Database Tables]
+direction TB
+end
+'''
