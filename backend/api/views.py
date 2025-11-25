@@ -11,7 +11,7 @@ Each class below corresponds to a specific API endpoint and defines:
 """
 
 from django.contrib.auth import get_user_model
-
+from django.contrib.auth import authenticate
 from django.utils import timezone
 from rest_framework import generics, permissions, status, exceptions, authentication
 from django.db.models.functions import TruncMonth, Coalesce
@@ -35,7 +35,6 @@ from django.utils import timezone
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 import csv
-import cv2
 import numpy as np
 import re
 from rest_framework.parsers import MultiPartParser, JSONParser

@@ -1,0 +1,67 @@
+name: Django CI
+run-name: ${{ github.actor }} is testing out django ci
+on: [push, pull_request]
+#on: [push]
+
+jobs:
+  #joe:
+    #runs-on: ubuntu-latest
+    #steps:
+      #- run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        db: [mysql]
+        python-version: ["3.13"]
+        include:
+          - db: mysql
+            db_port: 3306
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: soen341
+          MYSQL_ALLOW_EMPTY_PASSWORD: true
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        
+        
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: '${{ matrix.python-version }}'
+    #- name: start my sql
+      #run: sudo systemctl start mysql.service
+    - name: Install Dependencies
+      working-directory: backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-django pytest-cov
+        pip install numpy==2.3.5
+    - name: Run Tests
+      working-directory: backend
+      run: |
+        python manage.py makemigrations
+        python manage.py migrate
+        python manage.py test
+    - name: Test with pytest
+      working-directory: backend
+      run: |
+        pytest \
+          --ds=backend.settings \
+          --cov=. \
+          --cov-report=xml \
+          --cov-report=term \
+#        pytest tests.py --doctest-modules --junitxml=/test-results.xml -- cov=com --cov-report=xml --cov-report=html
+
