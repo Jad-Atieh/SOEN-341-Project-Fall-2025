@@ -13,7 +13,7 @@ def create_user(email, role='student', password='password123', is_active=True):
         email=email,
         password=password,
         role=role,
-        name=email.split('@')[0],  # simple name
+        name=email.split('joe@joe')[0],  # simple name
         status='active' if is_active else 'pending'
     )
     return user
@@ -38,6 +38,7 @@ class TicketCheckInTests(TestCase):
             end_time=(now + datetime.timedelta(hours=2)).time(),
             location="Test Location",
             status="approved",
+            capacity=100,
             organizer=self.organizer
         )
 
@@ -161,6 +162,7 @@ class OrganizerEventTests(TestCase):
             end_time=(now + datetime.timedelta(hours=2)).time(),
             location="Test Location",
             status="pending",
+            capacity=100,
             organizer=self.organizer
         )
         self.client = APIClient()
@@ -203,6 +205,7 @@ class OrganizerCannotChangeStatusTests(TestCase):
             end_time=(now + datetime.timedelta(hours=1)).time(),
             location="Test Location",
             status="pending",
+            capacity=100,
             organizer=self.organizer
         )
 
